@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgres"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("DATABASE_SHADOW_URL")
+}
+
+model Users {
+  id            Int      @id @default(autoincrement())
+  walletAddress String   @unique
+  lastLogin     String
+  UserOrders    Orders[]
+}
+
+model Orders {
+  id           Int    @id @default(autoincrement())
+  wallet       Users  @relation(fields: [walletId], references: [walletAddress], onDelete: NoAction, onUpdate: NoAction)
+  walletId     String
+  orderHash    String @unique
+  tokenPair    String
+  amount       String
+  feePercent   String
+  youReceive   String
+  status       String
+  createdOn    String
+}
