@@ -7,12 +7,14 @@ import {
     getAllTokens,
     getTokenPrices,
     createOrder,
+    getGasFee,
 } from './services';
 
 router.post('/login', userLogin);
 router.get('/chains', getAllChains);
 router.get('/tokens', getAllTokens);
 router.get('/prices', getTokenPrices);
+router.get('/gasFee', getGasFee);
 router.get('/limit-orders-by-address', getAllLimitOrdersByAddress);
 router.post('/order', createOrder);
 
