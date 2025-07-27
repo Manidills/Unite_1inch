@@ -218,7 +218,11 @@ export const userLogin: Handler = async (req, res) => {
             create: user,
             update: user,
         });
-        return res.status(200).json("user logged in")
+        return res.status(200).json({
+            success: true,
+            message: "user logged in",
+            data: result,
+        })
     } catch (error) {
         console.log(error)
         res.status(500).json({ error: "Failed to insert or update user" });
@@ -246,21 +250,29 @@ export const createOrder: Handler = async (req, res) => {
     try {
         const orderDetails = {
             walletId: req.body.walletAddress as string,
-            orderHash: req.body.walletAddress as string,
-            tokenPair: req.body.walletAddress as string,
-            amount: req.body.walletAddress as string,
-            feePercent: req.body.walletAddress as string,
-            youReceive: req.body.walletAddress as string,
+            orderHash: req.body.orderHash as string,
+            tokenPair: req.body.tokenPair as string,
+            amount: req.body.amount as string,
+            feePercent: req.body.feePercent as string,
+            youReceive: req.body.youReceive as string,
             status: 'open',
             createdOn: new Date().toISOString()
         }
         const result = await prisma.orders.create({
-            data: orderDetails
-        });
-        if(!result) {
-            return res.status(400).json({error: 'Failed to insert order'})
+                data: orderDetails
+            });
+        
+        if (!result) {
+            return res.status(400).json({
+                success: false,
+                error: 'Failed to insert order' 
+            })
         }
-        return res.status(200).json("order inserted in db")
+        return res.status(200).json({ 
+            success: true, 
+            message: "order inserted in db",
+            data: result
+        })
     } catch (error) {
         res.status(500).json({ error: "Failed to insert order" });
     }
