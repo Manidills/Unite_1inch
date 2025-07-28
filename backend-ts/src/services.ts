@@ -363,3 +363,57 @@ export const insertOrder: Handler = async (req, res) => {
         res.status(500).json({ error: "Failed to insert order" });
     }
 }
+
+export const getAllOrders: Handler = async (req, res) => {
+    const { walletAddress } = req.query
+    try {
+        const result = await prisma.orders.findMany({
+            where: {
+                walletId: walletAddress as string
+            }
+        });
+
+        if (!result) {
+            return res.status(400).json({
+                success: false,
+                error: 'Failed to fetch order'
+            })
+        }
+        return res.status(200).json({
+            success: true,
+            message: "orders fetched successfully",
+            data: result
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Failed to insert order" });
+    }
+}
+
+export const getOrderHistory: Handler = async (req, res) => {
+    const { walletAddress } = req.query
+    try {
+        const result = await prisma.orders.findMany({
+            where: {
+                walletId: {
+                    not: walletAddress as string,
+                },
+            },
+        });
+
+        if (!result) {
+            return res.status(400).json({
+                success: false,
+                error: 'Failed to fetch order'
+            })
+        }
+        return res.status(200).json({
+            success: true,
+            message: "orders fetched successfully",
+            data: result
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Failed to insert order" });
+    }
+}

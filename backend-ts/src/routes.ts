@@ -9,6 +9,8 @@ import {
     createOrder,
     getGasFee,
     insertOrder,
+    getAllOrders,
+    getOrderHistory,
 } from './services';
 
 router.post('/login', userLogin);
@@ -19,5 +21,7 @@ router.get('/gasFee', getGasFee);
 router.get('/limit-orders-by-address', getAllLimitOrdersByAddress);
 router.post('/order', createOrder);
 router.post('/insert-order', insertOrder);
+router.get('/order-by-address', getAllOrders)
+router.get('/order-history', getOrderHistory)
 
 export default router;
