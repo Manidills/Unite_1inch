@@ -2,11 +2,14 @@ import { config } from '../config/index';
 
 export const supportedTokens = ['USDT', 'USDC', 'WETH', 'DAI', 'WBTC'];
 
+const LOGIN_URL = `${config.api.baseUrl}/api/login`;
 const TOKEN_LIST_URL = `${config.api.baseUrl}/api/tokens`;
 const PRICE_URL = `${config.api.baseUrl}/api/prices`;
 const GAS_FEE_URL = `${config.api.baseUrl}/api/gasFee`;
 const ORDER_URL = `${config.api.baseUrl}/api/order`;
 const INSERT_ORDER_URL = `${config.api.baseUrl}/api/insert-order`;
+const USER_ORDER_URL = `${config.api.baseUrl}/api/order-by-address`;
+const ORDER_HISTORY_URL = `${config.api.baseUrl}/api/order-history`;
 
 const HEADERS = {
     Authorization: `Bearer ${config.oneInch.apiKey}`,
@@ -119,6 +122,48 @@ export async function insertOrder(orderBody) {
         });
         const result = await createOrder.json();
         return result;
+    } catch (error) {
+        console.error('failed to insert record into db', error);
+        return [];
+    }
+}
+
+export async function getUserOrders(walletAddress) {
+    try {
+        const apiResponse = await fetch(`${USER_ORDER_URL}?walletAddress=${walletAddress}`, {
+            headers: HEADERS,
+        });
+        const result = await apiResponse.json();
+        return result;
+    } catch (error) {
+        console.error('Failed to fetch user orders', error);
+        return [];
+    }
+}
+
+export async function getOrderHistory(walletAddress) {
+    try {
+        const apiResponse = await fetch(`${ORDER_HISTORY_URL}?walletAddress=${walletAddress}`, {
+            headers: HEADERS,
+        });
+        const result = await apiResponse.json();
+        return result;
+    } catch (error) {
+        console.error('Failed to fetch order history', error);
+        return [];
+    }
+}
+
+export async function login(address) {
+    try {
+        await fetch(`${LOGIN_URL}`, {
+            headers: HEADERS,
+            method: 'POST',
+            body: safeStringify({
+                walletAddress: address
+            })
+        });
+        return;
     } catch (error) {
         console.error('failed to insert record into db', error);
         return [];

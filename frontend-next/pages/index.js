@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useWallet } from '../contexts/WalletContext';
+import { login } from '../helper/apiHelper';
 import Head from 'next/head';
 
 export default function Home() {
@@ -10,6 +11,7 @@ export default function Home() {
 
   useEffect(() => {
     if (account) {
+      login(account)
       router.push('/dashboard');
     }
   }, [account, router]);
