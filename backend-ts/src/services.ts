@@ -209,11 +209,11 @@ export const userLogin: Handler = async (req, res) => {
     try {
         const { walletAddress } = req.body
         const user = {
-            walletAddress: walletAddress as string,
+            walletAddress: walletAddress?.toString().toLowerCase(),
             lastLogin: new Date().toISOString() as string,
         }
         const result = await prisma.users.upsert({
-            where: { walletAddress: walletAddress },
+            where: { walletAddress: walletAddress?.toString().toLowerCase() },
             create: user,
             update: user,
         });
@@ -334,7 +334,7 @@ export const insertOrder: Handler = async (req, res) => {
     const { orderBody } = req.body;
     try {
         const order = {
-            walletId: orderBody.walletAddress as string,
+            walletId: orderBody.walletAddress?.toString().toLowerCase(),
             orderHash: orderBody.orderHash as string,
             tokenPair: orderBody.tokenPair as string,
             amount: orderBody.amount as string,
@@ -369,7 +369,7 @@ export const getAllOrders: Handler = async (req, res) => {
     try {
         const result = await prisma.orders.findMany({
             where: {
-                walletId: walletAddress as string
+                walletId: walletAddress?.toString().toLowerCase()
             }
         });
 
@@ -396,7 +396,7 @@ export const getOrderHistory: Handler = async (req, res) => {
         const result = await prisma.orders.findMany({
             where: {
                 walletId: {
-                    not: walletAddress as string,
+                    not: walletAddress?.toString().toLowerCase()
                 },
             },
         });
