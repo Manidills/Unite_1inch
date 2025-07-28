@@ -1,6 +1,5 @@
 import { Handler } from 'express';
-import crypto from 'crypto';
-import { LimitOrder, MakerTraits, Address, Api, FetchProviderConnector, Sdk } from '@1inch/limit-order-sdk';
+import { MakerTraits, Address, FetchProviderConnector, Sdk } from '@1inch/limit-order-sdk';
 import { Wallet, ethers } from 'ethers'
 import { config } from './config/index'
 import axios from 'axios';
@@ -84,17 +83,17 @@ export const postToOrderBook: Handler = async (req, res) => {
     try {
         const postBody = {
             "orderHash": "0xb38fb763d044ea23826018cec9541f3799ea887ec921107a9bb3c99182b8ea75",
-            "signature": "0x0cad028018580ecbfa04cd352020f7130cabd133941bcdd1e3be9daa1412dd65392b65fd4300dcf44addaeff7b9c4bd09cd67f0c46b737c0aba4cf311cb4068b1c",
+            "signature": "string",
             "data": {
                 "makerAsset": "0xdac17f958d2ee523a2206206994597c13d831ec7",
                 "takerAsset": "0x111111111117dc0aa78b770fa6a738034120c302",
-                "maker": "0xc0182dcce8773d26acaddc0c09861d3ee11abf6b",
-                "receiver": "0x0000000000000000000000000000000000000000",
+                "maker": "string",
+                "receiver": "string",
                 "makingAmount": "100000000",
                 "takingAmount": "10000000000000000000",
                 "salt": "17649669",
                 "extension": "17649669",
-                "makerTraits": "904625697166532776746648320380374280103673874893732578335248959948990709760"
+                "makerTraits": "string"
             }
         }
 
@@ -247,33 +246,69 @@ async function serializeLimitOrder(order: any) {
 }
 
 export const createOrder: Handler = async (req, res) => {
+    const { orderType } = req.query as { orderType?: string };
     try {
-        const orderDetails = {
-            walletId: req.body.walletAddress as string,
-            orderHash: req.body.orderHash as string,
-            tokenPair: req.body.tokenPair as string,
-            amount: req.body.amount as string,
-            feePercent: req.body.feePercent as string,
-            youReceive: req.body.youReceive as string,
-            status: 'open',
-            createdOn: new Date().toISOString()
-        }
-        const result = await prisma.orders.create({
-                data: orderDetails
+        const apiConfig = {
+            networkId: config.chainId,
+            authKey: `${config.oneInch.apiKey}`,
+            httpConnector: new FetchProviderConnector()
+        };
+
+        const sdk = new Sdk(apiConfig);
+        if (orderType === 'submitOrder') {
+            const { orderDetails, limitOrder, signature } = req.body
+            await sdk.submitOrder(limitOrder, signature);
+            const order = {
+                walletId: orderDetails.walletAddress as string,
+                orderHash: orderDetails.orderHash as string,
+                tokenPair: orderDetails.tokenPair as string,
+                amount: orderDetails.amount as string,
+                feePercent: orderDetails.feePercent as string,
+                youReceive: orderDetails.youReceive as string,
+                status: 'open',
+                createdOn: new Date().toISOString()
+            }
+            const result = await prisma.orders.create({
+                data: order
             });
-        
-        if (!result) {
-            return res.status(400).json({
-                success: false,
-                error: 'Failed to insert order' 
+
+            if (!result) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Failed to insert order'
+                })
+            }
+            return res.status(200).json({
+                success: true,
+                message: "order inserted in db",
+                data: result
             })
         }
-        return res.status(200).json({ 
-            success: true, 
-            message: "order inserted in db",
-            data: result
-        })
+        if (orderType === 'createOrder') {
+
+            const { orderInfo } = req.body
+
+            const cleanedOrder = {
+                makerAsset: new Address(orderInfo.makerAsset),
+                takerAsset: new Address(orderInfo.takerAsset),
+                makingAmount: BigInt(orderInfo.makingAmount),
+                takingAmount: BigInt(orderInfo.takingAmount),
+                maker: new Address(orderInfo.maker.val),
+                receiver: new Address(orderInfo.receiver.val),
+            };
+            const expiresIn = BigInt(6000)
+            const expiration = BigInt(Math.floor(Date.now() / 1000)) + expiresIn
+            const makerTraits = MakerTraits.default()
+                .withExpiration(expiration)
+                .allowMultipleFills()
+                .allowPartialFills()
+
+            const limitOrder = await sdk.createOrder(cleanedOrder, makerTraits)
+            const typedData = limitOrder.getTypedData(config.chainId)
+            return res.status(200).json(typedData);
+        }
     } catch (error) {
+        console.log(error);
         res.status(500).json({ error: "Failed to insert order" });
     }
 }
@@ -292,5 +327,39 @@ export const getGasFee: Handler = async (req, res) => {
         return res.status(200).json(data);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch gas fee", err });
+    }
+}
+
+export const insertOrder: Handler = async (req, res) => {
+    const { orderDetails } = req.body;
+    try {
+        const order = {
+            walletId: orderDetails.walletAddress as string,
+            orderHash: orderDetails.orderHash as string,
+            tokenPair: orderDetails.tokenPair as string,
+            amount: orderDetails.amount as string,
+            feePercent: orderDetails.feePercent as string,
+            youReceive: orderDetails.youReceive as string,
+            status: 'open',
+            createdOn: new Date().toISOString()
+        }
+        const result = await prisma.orders.create({
+            data: order
+        });
+
+        if (!result) {
+            return res.status(400).json({
+                success: false,
+                error: 'Failed to insert order'
+            })
+        }
+        return res.status(200).json({
+            success: true,
+            message: "order inserted in db",
+            data: result
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Failed to insert order" });
     }
 }

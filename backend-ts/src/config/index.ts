@@ -15,5 +15,6 @@ export const config = {
     },
     rpc: {
         url: process.env.RPC_URL,
-    }
+    },
+    chainId: 1, // Etherum
 };

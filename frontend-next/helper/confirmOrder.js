@@ -1,8 +1,8 @@
-import { MakerTraits, Address, FetchProviderConnector, Sdk } from '@1inch/limit-order-sdk';
+import { Address, LimitOrder } from '@1inch/limit-order-sdk';
 import { ethers } from 'ethers';
 import { abi as erc20Abi } from './abi'
 import { config } from '../config/index';
-import { insertOrderIntoDB } from './apiHelper';
+import { submitAndInsertOrder, createOrder } from './apiHelper';
 
 export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
     try {
@@ -18,43 +18,23 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
         console.log('Checking token allowance...');
         await approveTokenIfNeeded(making.toString(), makingAmount, signer);
 
-        const apiConfig = {
-            networkId: config.chainId,
-            authKey: `${config.oneInch.apiKey}`,
-            httpConnector: new FetchProviderConnector(),
-            baseUrl: 'https://1inch-vercel-proxy-cg4rn9idz-gowthamjsdevs-projects.vercel.app/1inch'
-        };
-
-        const sdk = new Sdk(apiConfig);
-
-        const expiresIn = BigInt(6000)
-        const expiration = BigInt(Math.floor(Date.now() / 1000)) + expiresIn
-        const makerTraits = MakerTraits.default()
-            .withExpiration(expiration)
-            .allowMultipleFills()
-            .allowPartialFills()
-
-        const limitOrder = await sdk.createOrder(orderInfo, makerTraits)
-
-        const typedData = limitOrder.getTypedData(chainId)
-        const signature = await maker.signTypedData(
+        const typedData = await createOrder(orderInfo)
+        const signature = await signer.signTypedData(
             typedData.domain,
             { Order: typedData.types.Order },
             typedData.message
         )
 
-        console.log('✅ limitOrder', limitOrder)
-        console.log('✅ signature', signature)
-        const orderHash = limitOrder.getOrderHash(1)
-
-        console.log('✅ orderHash', orderHash)
-        await sdk.submitOrder(limitOrder, signature)
-
-        const orderBody = {
+        console.log("message---------", typedData.message)
+        const limitOrder = new LimitOrder(typedData.message); 
+        console.log("limitorder---------", limitOrder)
+        const orderHash = limitOrder.getOrderHash(1);
+        console.log("limitorder---------", orderHash)
+        const orderDetails = {
             orderHash,
             ...tradeInfo,
         }
-        const insertOrder = await insertOrderIntoDB(orderBody)
+        const insertOrder = await submitAndInsertOrder(orderDetails, limitOrder, signature)
         if (!insertOrder) {
             return false
         }

@@ -4,7 +4,9 @@ export const supportedTokens = ['USDT', 'USDC', 'WETH', 'DAI', 'WBTC'];
 
 const TOKEN_LIST_URL = `${config.api.baseUrl}/api/tokens`;
 const PRICE_URL = `${config.api.baseUrl}/api/prices`;
-const GAS_FEE_URL = `${config.api.baseUrl}/api/gasFee`
+const GAS_FEE_URL = `${config.api.baseUrl}/api/gasFee`;
+const ORDER_URL = `${config.api.baseUrl}/api/order`;
+const INSERT_ORDER_URL = `${config.api.baseUrl}/api/insert-order`;
 
 const HEADERS = {
     Authorization: `Bearer ${config.oneInch.apiKey}`,
@@ -64,17 +66,61 @@ export async function getGasfee(orderInfo) {
     }
 }
 
-export async function insertOrderIntoDB(orderInfo) {
+export async function submitAndInsertOrder(orderDetails, limitOrder, signature) {
     try {
-        const { makingAmount: makerAmount , takingAmount: takerAmount, makerAsset, takerAsset } = orderInfo;
-        const gasFeeRes = await fetch(`${GAS_FEE_URL}?makerAsset=${makerAsset}&takerAsset=${takerAsset}&makerAmount=${makerAmount}&takerAmount=${takerAmount}`, {
+        const submitOrder = await fetch(`${ORDER_URL}?orderType=submitOrder`, {
             headers: HEADERS,
+            method: 'POST',
+            body: safeStringify({
+                orderDetails,
+                limitOrder,
+                signature
+            })
         });
-        const feeData = await gasFeeRes.json();
-        return feeData;
+        const submitOrderRes = await submitOrder.json();
+        return submitOrderRes;
     } catch (error) {
         console.error('failed to insert record into db', error);
         return [];
     }
+}
 
+export async function createOrder(orderInfo) {
+    try {
+        const createOrder = await fetch(`${ORDER_URL}?orderType=createOrder`, {
+            headers: HEADERS,
+            method: 'POST',
+            body: safeStringify({
+                orderInfo
+            })
+        });
+        const result = await createOrder.json();
+        return result;
+    } catch (error) {
+        console.error('failed to insert record into db', error);
+        return [];
+    }
+}
+
+function safeStringify(obj) {
+    return JSON.stringify(obj, (_key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+    );
+}
+
+export async function insertOrder(orderBody) {
+    try {
+        const createOrder = await fetch(`${INSERT_ORDER_URL}`, {
+            headers: HEADERS,
+            method: 'POST',
+            body: safeStringify({
+                orderBody
+            })
+        });
+        const result = await createOrder.json();
+        return result;
+    } catch (error) {
+        console.error('failed to insert record into db', error);
+        return [];
+    }
 }
