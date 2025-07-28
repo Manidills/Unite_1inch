@@ -50,7 +50,15 @@ export default function ChatPanel() {
           alert('Token pair is missing')
         }
         const tokenDetails = await getTokensWithPrices([asset_from, asset_to]);
-        const { orderInfo, tradeInfo } = await getOrderInfoFromIntent(data.intent, tokenDetails, account)
+        let intent = { ...data.intent };
+
+        if (intent.intent === "sell") {
+          // Swap asset_from and asset_to
+          const temp = intent.asset_from;
+          intent.asset_from = intent.asset_to;
+          intent.asset_to = temp;
+        }
+        const { orderInfo, tradeInfo } = await getOrderInfoFromIntent(intent, tokenDetails, account)
 
         const apiResponse = { tokenDetails, tradeInfo, orderInfo }
         setApiResponse(apiResponse);

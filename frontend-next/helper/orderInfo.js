@@ -44,8 +44,8 @@ async function getOrderInfoFromIntent(intent, tokenDetails, userAddress) {
     takerAsset: assetTo.address,
     makingAmount,
     takingAmount,
-    maker: new Address(userAddress),
-    receiver: new Address(userAddress),
+    maker: userAddress,
+    receiver: userAddress,
   };
 
   const feeInfo = await getGasfee(orderInfo);

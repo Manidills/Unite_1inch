@@ -331,15 +331,15 @@ export const getGasFee: Handler = async (req, res) => {
 }
 
 export const insertOrder: Handler = async (req, res) => {
-    const { orderDetails } = req.body;
+    const { orderBody } = req.body;
     try {
         const order = {
-            walletId: orderDetails.walletAddress as string,
-            orderHash: orderDetails.orderHash as string,
-            tokenPair: orderDetails.tokenPair as string,
-            amount: orderDetails.amount as string,
-            feePercent: orderDetails.feePercent as string,
-            youReceive: orderDetails.youReceive as string,
+            walletId: orderBody.walletAddress as string,
+            orderHash: orderBody.orderHash as string,
+            tokenPair: orderBody.tokenPair as string,
+            amount: orderBody.amount as string,
+            feePercent: orderBody.feePercent as string,
+            youReceive: orderBody.youReceive as string,
             status: 'open',
             createdOn: new Date().toISOString()
         }

@@ -2,7 +2,7 @@ import { MakerTraits, Address, FetchProviderConnector, Sdk } from '@1inch/limit-
 import { ethers } from 'ethers';
 import { abi as erc20Abi } from './abi'
 import { config } from '../config/index';
-import { insertOrderIntoDB } from './apiHelper';
+import { insertOrder } from './apiHelper';
 
 export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
     try {
@@ -11,7 +11,7 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
             makingAmount,
         } = orderInfo;
         const signer = await provider.getSigner();
-
+        const walletAddress = await signer.getAddress();
         const making = new Address(makerAsset);
 
         // ✅ 1. Check and approve token if needed
@@ -22,7 +22,7 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
             networkId: config.chainId,
             authKey: `${config.oneInch.apiKey}`,
             httpConnector: new FetchProviderConnector(),
-            baseUrl: 'https://1inch-vercel-proxy-cg4rn9idz-gowthamjsdevs-projects.vercel.app/1inch'
+            baseUrl: 'https://1inch-vercel-proxy-cg4rn9idz-gowthamjsdevs-projects.vercel.app/orderbook/v4.0'
         };
 
         const sdk = new Sdk(apiConfig);
@@ -34,17 +34,23 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
             .allowMultipleFills()
             .allowPartialFills()
 
-        const limitOrder = await sdk.createOrder(orderInfo, makerTraits)
+        const cleanedOrder = {
+            makerAsset: new Address(orderInfo.makerAsset),
+            takerAsset: new Address(orderInfo.takerAsset),
+            makingAmount: orderInfo.makingAmount,
+            takingAmount: orderInfo.takingAmount,
+            maker: orderInfo.maker,
+            receiver: orderInfo.receiver,
+        };
+        const limitOrder = await sdk.createOrder(cleanedOrder, makerTraits)
 
-        const typedData = limitOrder.getTypedData(chainId)
-        const signature = await maker.signTypedData(
+        const typedData = limitOrder.getTypedData(config.chainId)
+        const signature = await signer.signTypedData(
             typedData.domain,
             { Order: typedData.types.Order },
             typedData.message
         )
 
-        console.log('✅ limitOrder', limitOrder)
-        console.log('✅ signature', signature)
         const orderHash = limitOrder.getOrderHash(1)
 
         console.log('✅ orderHash', orderHash)
@@ -52,10 +58,11 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
 
         const orderBody = {
             orderHash,
+            walletAddress,
             ...tradeInfo,
         }
-        const insertOrder = await insertOrderIntoDB(orderBody)
-        if (!insertOrder) {
+        const insertedOrder = await insertOrder(orderBody)
+        if (!insertedOrder) {
             return false
         }
         return true
