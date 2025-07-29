@@ -25,10 +25,19 @@ export const WalletProvider = ({ children }) => {
     setIsConnecting(true);
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
-      const accounts = await provider.send('eth_requestAccounts', []);
       
+      // Request account access - this will show MetaMask's account selection dialog
+      await provider.send('eth_requestAccounts', []);
+      
+      // Get the currently selected account (the one user chose)
+      const accounts = await provider.send('eth_accounts', []);
+      
+      if (accounts.length === 0) {
+        throw new Error('No accounts found');
+      }
+
       setProvider(provider);
-      setAccount(accounts[0]);
+      setAccount(accounts[0]); // This will be the account the user selected
       
       return accounts[0];
     } catch (error) {
@@ -44,23 +53,60 @@ export const WalletProvider = ({ children }) => {
     setProvider(null);
   };
 
+  // Check if already connected on component mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (window.ethereum) {
+        try {
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const accounts = await provider.send('eth_accounts', []);
+          
+          if (accounts.length > 0) {
+            setProvider(provider);
+            setAccount(accounts[0]);
+          }
+        } catch (error) {
+          console.error('Error checking connection:', error);
+        }
+      }
+    };
+
+    checkConnection();
+  }, []);
+
   useEffect(() => {
     if (window.ethereum) {
-      window.ethereum.on('accountsChanged', (accounts) => {
+      const handleAccountsChanged = async (accounts) => {
         if (accounts.length === 0) {
           disconnectWallet();
         } else {
+          // Update to the newly selected account
           setAccount(accounts[0]);
+          
+          // Update provider to ensure it's using the correct account
+          if (provider) {
+            const newProvider = new ethers.BrowserProvider(window.ethereum);
+            setProvider(newProvider);
+          }
         }
-      });
-    }
+      };
 
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeAllListeners('accountsChanged');
-      }
-    };
-  }, []);
+      const handleChainChanged = () => {
+        // Reload the page when chain changes to avoid issues
+        window.location.reload();
+      };
+
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      window.ethereum.on('chainChanged', handleChainChanged);
+
+      return () => {
+        if (window.ethereum) {
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+          window.ethereum.removeListener('chainChanged', handleChainChanged);
+        }
+      };
+    }
+  }, [provider]);
 
   const value = {
     account,

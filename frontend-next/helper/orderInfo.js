@@ -32,9 +32,9 @@ async function getOrderInfoFromIntent(intent, tokenDetails, userAddress) {
     }
   }
 
-  const total = parseFloat(intent.amount) * targetPrice;
+  // const total = parseFloat(intent.amount) * targetPrice; // incorrect
   const takingAmount = ethers.parseUnits(
-    total.toFixed(assetTo.decimals),
+    targetPrice.toFixed(assetTo.decimals),
     assetTo.decimals
   );
 
@@ -89,14 +89,11 @@ async function getTradeSummary(orderInfo, feeData, tokenDetails) {
   const takerAmountReadable = parseFloat(takingAmount) / 10 ** takerDecimals;
   const makerAmountReadable = parseFloat(makingAmount) / 10 ** makerDecimals;
 
-  const feeValue = (makerAmountReadable * actualFeeBps) / 10000;
-  const youReceive = makerAmountReadable - feeValue;
-
   return {
     tokenPair: `${takerToken.symbol}/${makerToken.symbol}`,
     amount: `${takerAmountReadable} ${makerToken.symbol}`,
     feePercent: `${actualFeeBps / 100}%`,
-    youReceive: `${youReceive.toFixed(6)} ${takerToken.symbol}`
+    youReceive: `${makerAmountReadable.toFixed(6)} ${takerToken.symbol}`
   };
 }
 
