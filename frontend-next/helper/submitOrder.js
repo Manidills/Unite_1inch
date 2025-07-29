@@ -22,7 +22,7 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
             networkId: config.chainId,
             authKey: `${config.oneInch.apiKey}`,
             httpConnector: new FetchProviderConnector(),
-            baseUrl: 'https://1inch-vercel-proxy-cg4rn9idz-gowthamjsdevs-projects.vercel.app/orderbook/v4.0'
+            baseUrl: `${config.oneInch.proxy}/orderbook/v4.0`
         };
 
         const sdk = new Sdk(apiConfig);
