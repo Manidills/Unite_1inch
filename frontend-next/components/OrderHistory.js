@@ -42,10 +42,12 @@ export default function OrderHistory() {
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
-      case 'completed':
+      case 'filled':
         return 'bg-green-100 text-green-700';
       case 'open':
         return 'bg-yellow-100 text-yellow-700';
+      case 'expired':
+        return 'bg-red-100 text-red-700';
       default:
         return 'bg-gray-100 text-gray-700';
     }
@@ -83,9 +85,9 @@ export default function OrderHistory() {
         <div className="bg-white rounded-xl p-6 border border-gray-200/50 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Completed</p>
+              <p className="text-sm text-gray-600">Filled</p>
               <p className="text-2xl font-bold text-green-600">
-                {orders.filter(o => o.status === 'completed').length}
+                {orders.filter(o => o.status === 'filled').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -112,6 +114,22 @@ export default function OrderHistory() {
           </div>
         </div>
 
+        <div className="bg-white rounded-xl p-6 border border-gray-200/50 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Expired</p>
+              <p className="text-2xl font-bold text-red-600">
+                {orders.filter(o => o.status === 'expired').length}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {/* Filters */}
@@ -119,7 +137,7 @@ export default function OrderHistory() {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-800">Order Filters</h3>
           <div className="flex space-x-2">
-            {['all', 'completed', 'open'].map((status) => (
+            {['all', 'filled', 'open', 'expired'].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilter(status)}
