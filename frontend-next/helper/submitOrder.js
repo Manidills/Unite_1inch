@@ -27,7 +27,7 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
 
         const sdk = new Sdk(apiConfig);
 
-        const expiresIn = BigInt(config.expiry)
+        const expiresIn = BigInt(parseInt(config.expiry))
         const expiration = BigInt(Math.floor(Date.now() / 1000)) + expiresIn
         const makerTraits = MakerTraits.default()
             .withExpiration(expiration)

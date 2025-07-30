@@ -17,5 +17,5 @@ export const config = {
         url: process.env.NEXT_PUBLIC_RPC_URL,
     },
     chainId: 1,
-    expiry: process.env.NEXT_PUBLIC_EXPIRY,
+    expiry: process.env.NEXT_PUBLIC_EXPIRY || 86400,
 };
