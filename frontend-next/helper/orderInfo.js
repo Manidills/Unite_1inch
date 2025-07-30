@@ -14,12 +14,12 @@ async function getOrderInfoFromIntent(intent, tokenDetails, userAddress) {
     throw new Error("Token details not found for assets in intent.");
   }
 
-  const makingAmount = ethers.parseUnits(intent.amount, assetFrom.decimals);
+  const makingAmount = ethers.parseUnits(intent.price_target, assetFrom.decimals);
 
   let targetPrice;
 
   if (intent.trigger === "price_based") {
-    targetPrice = parseFloat(intent.price_target);
+    targetPrice = parseFloat(intent.amount);
   } else {
     const fromPrice = parseFloat(assetFrom.price);
     const percentage = parseFloat(intent.trigger_value) / 100;

@@ -53,15 +53,25 @@ export const useOrderFiller = (chainId) => {
   };
 };
 
-
 const LIMIT_ORDER_PROTOCOL_ADDRESSES = {
   1: '0x111111125421ca6dc452d289314280a0f8842a65',     // Ethereum mainnet
 };
 
-// Minimal ABI for filling orders
-const LIMIT_ORDER_ABI = [
-  'function fillOrder((address,address,uint256,uint256,uint256,address,address,address,uint256,bytes) order, bytes signature, bytes interaction, uint256 makingAmount, uint256 takingAmount) external payable returns (uint256, uint256, bytes32)',
-  'function remaining(bytes32 orderHash) external view returns (uint256)'
+// Updated ABI for 1inch V6 contract
+const LIMIT_ORDER_V6_ABI = [
+  // V6 fillOrder function with correct signature
+  'function fillOrder((uint256 salt, uint256 maker, uint256 receiver, uint256 makerAsset, uint256 takerAsset, uint256 makingAmount, uint256 takingAmount, uint256 makerTraits) order, bytes32 r, bytes32 vs, uint256 amount, uint256 takerTraits) payable returns (uint256, uint256, bytes32)',
+  
+  // Alternative fillOrderArgs if you need to pass additional data
+  'function fillOrderArgs((uint256 salt, uint256 maker, uint256 receiver, uint256 makerAsset, uint256 takerAsset, uint256 makingAmount, uint256 takingAmount, uint256 makerTraits) order, bytes32 r, bytes32 vs, uint256 amount, uint256 takerTraits, bytes args) payable returns (uint256, uint256, bytes32)',
+  
+  // For contract orders (if maker is a contract)
+  'function fillContractOrder((uint256 salt, uint256 maker, uint256 receiver, uint256 makerAsset, uint256 takerAsset, uint256 makingAmount, uint256 takingAmount, uint256 makerTraits) order, bytes signature, uint256 amount, uint256 takerTraits) returns (uint256, uint256, bytes32)',
+  
+  // Utility functions
+  'function rawRemainingInvalidatorForOrder(address maker, bytes32 orderHash) view returns (uint256)',
+  'function hashOrder((uint256 salt, uint256 maker, uint256 receiver, uint256 makerAsset, uint256 takerAsset, uint256 makingAmount, uint256 takingAmount, uint256 makerTraits) order) view returns (bytes32)',
+  'function checkPredicate(bytes predicate) view returns (bool)'
 ];
 
 // ERC20 ABI for token operations
@@ -70,11 +80,40 @@ const ERC20_ABI = [
   'function allowance(address owner, address spender) view returns (uint256)',
   'function approve(address spender, uint256 amount) returns (bool)',
   'function decimals() view returns (uint8)',
-  'function symbol() view returns (string)'
+  'function symbol() view returns (string)',
+  'function name() view returns (string)'
 ];
 
 /**
- * Simple Order Filler Class
+ * Helper function to convert address to packed format used by 1inch V6
+ */
+function packAddress(address) {
+  // Remove 0x prefix and convert to BigInt
+  const hex = address.replace('0x', '');
+  return BigInt('0x' + hex);
+}
+
+/**
+ * Helper function to split signature into r, s, v components for V6
+ */
+function splitSignature(signature) {
+  const sig = ethers.Signature.from(signature);
+  
+  // V6 uses packed vs format (v + s)
+  let vs = sig.s;
+  if (sig.v === 28) {
+    // Set the highest bit for v=28
+    vs = BigInt(sig.s) | (BigInt(1) << BigInt(255));
+  }
+  
+  return {
+    r: sig.r,
+    vs: '0x' + vs.toString(16).padStart(64, '0')
+  };
+}
+
+/**
+ * Simple Order Filler Class for 1inch V6
  */
 export class SimpleOrderFiller {
   constructor(chainId) {
@@ -87,27 +126,39 @@ export class SimpleOrderFiller {
   }
 
   /**
-   * Convert API order data to contract struct format
+   * Convert API order data to V6 contract struct format
    */
-  async parseOrderStruct(orderData) {
-    return [
-      orderData.makerAsset,                           // address makerAsset
-      orderData.takerAsset,                           // address takerAsset
-      orderData.data.makingAmount,                         // uint256 makingAmount
-      orderData.data.takingAmount,                         // uint256 takingAmount
-      orderData.data.salt || '0',                          // uint256 salt
-      orderData.data.maker,                                // address maker
-      orderData.data.receiver || orderData.data.maker,         // address receiver
-      orderData.allowedSender || ethers.ZeroAddress, // address allowedSender
-      orderData.data.makerTraits || '0',                   // uint256 makerTraits
-      orderData.interactions || '0x'                  // bytes interactions
-    ];
+  parseOrderStruct(orderData) {
+    return {
+      salt: BigInt(orderData.data.salt || '0'),
+      maker: packAddress(orderData.data.maker),
+      receiver: packAddress(orderData.data.receiver || orderData.data.maker),
+      makerAsset: packAddress(orderData.makerAsset),
+      takerAsset: packAddress(orderData.takerAsset),
+      makingAmount: BigInt(orderData.data.makingAmount),
+      takingAmount: BigInt(orderData.data.takingAmount),
+      makerTraits: BigInt(orderData.data.makerTraits || '0')
+    };
   }
 
   /**
    * Check if user has sufficient balance and allowance
    */
   async checkUserRequirements(provider, userAddress, tokenAddress, amount) {
+    // Handle ETH case
+    if (tokenAddress === ethers.ZeroAddress || tokenAddress.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee') {
+      const balance = await provider.getBalance(userAddress);
+      return {
+        hasBalance: balance >= amount,
+        hasAllowance: true, // ETH doesn't need allowance
+        balance,
+        allowance: BigInt(0),
+        symbol: 'ETH',
+        decimals: 18,
+        required: amount
+      };
+    }
+
     const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
     
     // Check balance
@@ -154,14 +205,13 @@ export class SimpleOrderFiller {
   /**
    * Check if order is still valid and fillable
    */
-  async validateOrder(provider, orderHash) {
-    const contract = new ethers.Contract(this.contractAddress, LIMIT_ORDER_ABI, provider);
-    console.log('done')
-    // Check remaining amount
-    const remaining = await contract.remaining(orderHash);
-    console.log('remaining', remaining)
-    if (remaining === BigInt(0)) {
-      console.log('error')
+  async validateOrder(provider, orderHash, makerAddress) {
+    const contract = new ethers.Contract(this.contractAddress, LIMIT_ORDER_V6_ABI, provider);
+    
+    // Check remaining amount using the V6 function
+    const remaining = await contract.rawRemainingInvalidatorForOrder(makerAddress, orderHash);
+    
+    if (remaining !== BigInt(0)) {
       throw new Error('Order is fully filled or cancelled');
     }
     
@@ -169,7 +219,7 @@ export class SimpleOrderFiller {
   }
 
   /**
-   * Fill a complete limit order
+   * Fill a complete limit order using V6 contract
    */
   async fillCompleteOrder(signer, orderHash, signature, options = {}) {
     try {
@@ -185,16 +235,17 @@ export class SimpleOrderFiller {
         makerAsset: orderData.makerAsset,
         takerAsset: orderData.takerAsset,
         makingAmount: orderData.data.makingAmount,
-        takingAmount: orderData.data.takingAmount
+        takingAmount: orderData.data.takingAmount,
+        maker: orderData.data.maker
       });
       
       // Step 2: Validate order is still fillable
       console.log('Validating order...');
-      await this.validateOrder(provider, orderHash);
+      await this.validateOrder(provider, orderHash, orderData.data.maker);
       
-      // Step 3: Parse order struct
-      const orderStruct = await this.parseOrderStruct(orderData);
-      console.log('Validated and formatted order', orderStruct)
+      // Step 3: Parse order struct for V6
+      const orderStruct = this.parseOrderStruct(orderData);
+      console.log('Validated and formatted order for V6');
 
       // Step 4: Check user requirements
       console.log('Checking user balance and allowance...');
@@ -217,21 +268,28 @@ export class SimpleOrderFiller {
         throw new Error(`Insufficient ${requirements.symbol} balance. Required: ${ethers.formatUnits(requirements.required, requirements.decimals)}, Available: ${ethers.formatUnits(requirements.balance, requirements.decimals)}`);
       }
       
-      // Step 5: Approve tokens if needed
-      if (!requirements.hasAllowance) {
+      // Step 5: Approve tokens if needed (skip for ETH)
+      if (!requirements.hasAllowance && requirements.symbol !== 'ETH') {
         console.log('Token approval required...');
         await this.approveToken(signer, orderData.takerAsset, BigInt(orderData.data.takingAmount));
         console.log('Token approval completed');
       } else {
-        console.log('Token already approved');
+        console.log('Token already approved or ETH transaction');
       }
       
-      // Step 6: Fill the order
-      console.log('Filling order...');
-      const contract = new ethers.Contract(this.contractAddress, LIMIT_ORDER_ABI, signer);
+      // Step 6: Prepare signature for V6
+      const { r, vs } = splitSignature(signature);
+      
+      // Step 7: Fill the order using V6 contract
+      console.log('Filling order with V6 contract...');
+      const contract = new ethers.Contract(this.contractAddress, LIMIT_ORDER_V6_ABI, signer);
+      
+      const fillAmount = BigInt(orderData.data.takingAmount); // Amount taker wants to fill
+      const takerTraits = BigInt(0); // Default taker traits
       
       const txOptions = {
         gasLimit: options.gasLimit || 300000,
+        ...(requirements.symbol === 'ETH' && { value: fillAmount }), // Add ETH value if needed
         ...(options.gasPrice && { gasPrice: options.gasPrice }),
         ...(options.maxFeePerGas && { 
           maxFeePerGas: options.maxFeePerGas,
@@ -239,20 +297,54 @@ export class SimpleOrderFiller {
         })
       };
       
-      const fillTx = await contract.fillOrder(
-        orderStruct,
-        signature,
-        '0x', // no interaction needed for simple fills
-        BigInt(orderData.data.makingAmount), // fill complete making amount
-        BigInt(orderData.data.takingAmount), // fill complete taking amount
-        txOptions
-      );
+      // Determine if maker is a contract (use fillContractOrder) or EOA (use fillOrder)
+      const makerCode = await provider.getCode(orderData.data.maker);
+      const isContractMaker = makerCode !== '0x';
+      
+      let fillTx;
+      
+      if (isContractMaker) {
+        // Use fillContractOrder for contract makers
+        fillTx = await contract.fillContractOrder(
+          orderStruct,
+          signature, // Full signature for contract orders
+          fillAmount,
+          takerTraits,
+          txOptions
+        );
+      } else {
+        // Use fillOrder for EOA makers
+        fillTx = await contract.fillOrder(
+          orderStruct,
+          r,
+          vs,
+          fillAmount,
+          takerTraits,
+          txOptions
+        );
+      }
       
       console.log(`Fill transaction sent: ${fillTx.hash}`);
       
-      // Step 7: Wait for confirmation
+      // Step 8: Wait for confirmation
       const receipt = await fillTx.wait();
       console.log(`Fill transaction confirmed in block: ${receipt.blockNumber}`);
+      
+      // Parse logs to get actual filled amounts
+      let actualMakingAmount = orderData.data.makingAmount;
+      let actualTakingAmount = orderData.data.takingAmount;
+      
+      // Look for OrderFilled event in logs
+      const orderFilledTopic = ethers.id('OrderFilled(bytes32,uint256)');
+      const orderFilledLog = receipt.logs.find(log => log.topics[0] === orderFilledTopic);
+      
+      if (orderFilledLog) {
+        const decodedLog = ethers.AbiCoder.defaultAbiCoder().decode(
+          ['bytes32', 'uint256'], 
+          orderFilledLog.data
+        );
+        actualMakingAmount = decodedLog[1].toString();
+      }
       
       return {
         success: true,
@@ -260,11 +352,25 @@ export class SimpleOrderFiller {
         blockNumber: receipt.blockNumber,
         gasUsed: receipt.gasUsed.toString(),
         orderHash,
-        filledAmount: orderData.data.makingAmount
+        filledMakingAmount: actualMakingAmount,
+        filledTakingAmount: actualTakingAmount,
+        isContractMaker
       };
       
     } catch (error) {
       console.error('Fill order failed:', error);
+      
+      // Parse specific V6 errors
+      if (error.message.includes('OrderExpired')) {
+        throw new Error('Order has expired');
+      } else if (error.message.includes('InvalidatedOrder')) {
+        throw new Error('Order has been cancelled or invalidated');
+      } else if (error.message.includes('InsufficientBalance')) {
+        throw new Error('Insufficient balance to fill order');
+      } else if (error.message.includes('TakingAmountExceeded')) {
+        throw new Error('Taking amount exceeded available');
+      }
+      
       throw error;
     }
   }
@@ -276,21 +382,53 @@ export class SimpleOrderFiller {
     try {
       const orderData = await getOrderDetails(orderHash);
       const orderStruct = this.parseOrderStruct(orderData);
+      const { r, vs } = splitSignature(signature);
       
-      const contract = new ethers.Contract(this.contractAddress, LIMIT_ORDER_ABI, provider);
+      const contract = new ethers.Contract(this.contractAddress, LIMIT_ORDER_V6_ABI, provider);
       
-      const gasEstimate = await contract.fillOrder.estimateGas(
-        orderStruct,
-        signature,
-        '0x',
-        BigInt(orderData.data.makingAmount),
-        BigInt(orderData.data.takingAmount)
-      );
+      const fillAmount = BigInt(orderData.data.takingAmount);
+      const takerTraits = BigInt(0);
+      
+      // Check if maker is contract
+      const makerCode = await provider.getCode(orderData.data.maker);
+      const isContractMaker = makerCode !== '0x';
+      
+      let gasEstimate;
+      
+      if (isContractMaker) {
+        gasEstimate = await contract.fillContractOrder.estimateGas(
+          orderStruct,
+          signature,
+          fillAmount,
+          takerTraits
+        );
+      } else {
+        gasEstimate = await contract.fillOrder.estimateGas(
+          orderStruct,
+          r,
+          vs,
+          fillAmount,
+          takerTraits
+        );
+      }
       
       return gasEstimate;
     } catch (error) {
       console.warn('Gas estimation failed:', error);
-      return BigInt(300000); // fallback gas limit
+      return BigInt(400000); // Higher fallback for V6
     }
   }
+
+  /**
+   * Get order hash using the V6 contract
+   */
+  async getOrderHash(provider, orderData) {
+    const contract = new ethers.Contract(this.contractAddress, LIMIT_ORDER_V6_ABI, provider);
+    const orderStruct = this.parseOrderStruct(orderData);
+    
+    return await contract.hashOrder(orderStruct);
+  }
 }
+
+// Export additional utilities
+export { packAddress, splitSignature };
