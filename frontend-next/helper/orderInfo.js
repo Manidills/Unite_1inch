@@ -91,9 +91,9 @@ async function getTradeSummary(orderInfo, feeData, tokenDetails) {
 
   return {
     tokenPair: `${takerToken.symbol}/${makerToken.symbol}`,
-    amount: `${takerAmountReadable} ${makerToken.symbol}`,
+    amount: `${makerAmountReadable} ${makerToken.symbol}`,
     feePercent: `${actualFeeBps / 100}%`,
-    youReceive: `${makerAmountReadable.toFixed(6)} ${takerToken.symbol}`
+    youReceive: `${takerAmountReadable.toFixed(6)} ${takerToken.symbol}`
   };
 }
 
