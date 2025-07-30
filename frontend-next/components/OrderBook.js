@@ -1,14 +1,42 @@
-// components/OrderHistory.js
 import { useState, useEffect } from 'react';
 import { getOrderHistory } from '../helper/apiHelper';
 import { useWallet } from '../contexts/WalletContext';
+import { useOrderFiller } from '../helper/fillOrder';
+import { config } from '../config';
 
-export default function OrderHistory() {
-  const { account } = useWallet();
+export default function OrderBook() {
+  const { account, provider } = useWallet();
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [copiedHash, setCopiedHash] = useState(null);
+  const [result, setResult] = useState(null);
+  const [fillingOrderId, setFillingOrderId] = useState(null);
+
+  const { fillOrder, loading, clearError } = useOrderFiller(config.chainId, config.oneInch.apiKey);
+  const handleFillOrder = async (order) => {
+    if (!provider) {
+      alert('Please connect your wallet');
+      return;
+    }
+    setFillingOrderId(order.id);
+    try {
+      clearError();
+      const signer = await provider.getSigner();
+      const fillResult = await fillOrder(signer, order.orderHash);
+      setResult(fillResult);
+      console.log('Order filled successfully:', result);
+
+      // You can show success message or redirect
+      alert(`Order filled successfully! Tx: ${fillResult.transactionHash}`);
+
+    } catch (err) {
+      console.error('Fill failed:', err);
+      alert(`Fill failed: ${err.message}`);
+    } finally {
+      setFillingOrderId(null)
+    }
+  };
 
   const handleCopy = (hash) => {
     navigator.clipboard.writeText(hash);
@@ -144,10 +172,14 @@ export default function OrderHistory() {
                   <td className="px-6 py-4">
                     {order.status === 'open' && (
                       <button
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg shadow"
                         onClick={() => handleFillOrder(order)}
+                        disabled={ loading || fillingOrderId === order.id && (!provider)}
+                        className={`px-6 py-2 rounded-lg font-medium ${fillingOrderId === order.id || !provider
+                            ? 'bg-gray-300 cursor-not-allowed'
+                            : 'bg-blue-500 hover:bg-blue-600 text-white'
+                          }`}
                       >
-                        Fill Order
+                        {fillingOrderId === order.id ? 'Filling Order...' : 'Fill Order'}
                       </button>
                     )}
                   </td>

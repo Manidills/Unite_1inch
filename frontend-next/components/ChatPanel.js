@@ -101,8 +101,8 @@ export default function ChatPanel() {
       console.error('Confirm order failed:', error);
       alert('Something went wrong while confirming the order.');
     } finally {
-    setIsConfirming(false);
-  }
+      setIsConfirming(false);
+    }
   };
 
 
