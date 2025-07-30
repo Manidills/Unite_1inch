@@ -336,6 +336,7 @@ export const insertOrder: Handler = async (req, res) => {
         const order = {
             walletId: orderBody.walletAddress?.toString().toLowerCase(),
             orderHash: orderBody.orderHash as string,
+            signature: orderBody?.signature as string,
             tokenPair: orderBody.tokenPair as string,
             amount: orderBody.amount as string,
             feePercent: orderBody.feePercent as string,

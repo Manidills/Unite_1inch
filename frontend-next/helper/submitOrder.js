@@ -59,6 +59,7 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
         const orderBody = {
             orderHash,
             walletAddress,
+            ...signature,
             ...tradeInfo,
         }
         const insertedOrder = await insertOrder(orderBody)

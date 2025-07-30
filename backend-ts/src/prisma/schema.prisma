@@ -20,6 +20,7 @@ model Orders {
   wallet       Users  @relation(fields: [walletId], references: [walletAddress], onDelete: NoAction, onUpdate: NoAction)
   walletId     String
   orderHash    String @unique
+  signature    String?
   tokenPair    String
   amount       String
   feePercent   String

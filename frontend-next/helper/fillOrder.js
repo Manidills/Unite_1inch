@@ -9,12 +9,12 @@ export const useOrderFiller = (chainId) => {
   
   const filler = new SimpleOrderFiller(chainId);
   
-  const fillOrder = useCallback(async (signer, orderHash, options = {}) => {
+  const fillOrder = useCallback(async (signer, orderHash, signature, options = {}) => {
     setLoading(true);
     setError(null);
     
     try {
-      const result = await filler.fillCompleteOrder(signer, orderHash, options);
+      const result = await filler.fillCompleteOrder(signer, orderHash, signature, options);
       return result;
     } catch (err) {
       const errorMessage = err.message || 'Fill order failed';
@@ -25,9 +25,9 @@ export const useOrderFiller = (chainId) => {
     }
   }, [filler]);
   
-  const estimateGas = useCallback(async (provider, orderHash) => {
+  const estimateGas = useCallback(async (provider, orderHash, signature) => {
     try {
-      return await filler.estimateGas(provider, orderHash);
+      return await filler.estimateGas(provider, orderHash, signature);
     } catch (err) {
       console.warn('Gas estimation failed:', err);
       return BigInt(300000);
@@ -89,7 +89,7 @@ export class SimpleOrderFiller {
   /**
    * Convert API order data to contract struct format
    */
-  parseOrderStruct(orderData) {
+  async parseOrderStruct(orderData) {
     return [
       orderData.makerAsset,                           // address makerAsset
       orderData.takerAsset,                           // address takerAsset
@@ -156,11 +156,12 @@ export class SimpleOrderFiller {
    */
   async validateOrder(provider, orderHash) {
     const contract = new ethers.Contract(this.contractAddress, LIMIT_ORDER_ABI, provider);
-    
+    console.log('done')
     // Check remaining amount
     const remaining = await contract.remaining(orderHash);
-    
+    console.log('remaining', remaining)
     if (remaining === BigInt(0)) {
+      console.log('error')
       throw new Error('Order is fully filled or cancelled');
     }
     
@@ -170,7 +171,7 @@ export class SimpleOrderFiller {
   /**
    * Fill a complete limit order
    */
-  async fillCompleteOrder(signer, orderHash, options = {}) {
+  async fillCompleteOrder(signer, orderHash, signature, options = {}) {
     try {
       console.log(`Starting to fill order: ${orderHash}`);
       
@@ -192,8 +193,9 @@ export class SimpleOrderFiller {
       await this.validateOrder(provider, orderHash);
       
       // Step 3: Parse order struct
-      const orderStruct = this.parseOrderStruct(orderData);
-      
+      const orderStruct = await this.parseOrderStruct(orderData);
+      console.log('Validated and formatted order', orderStruct)
+
       // Step 4: Check user requirements
       console.log('Checking user balance and allowance...');
       const requirements = await this.checkUserRequirements(
@@ -239,7 +241,7 @@ export class SimpleOrderFiller {
       
       const fillTx = await contract.fillOrder(
         orderStruct,
-        orderData.signature,
+        signature,
         '0x', // no interaction needed for simple fills
         BigInt(orderData.data.makingAmount), // fill complete making amount
         BigInt(orderData.data.takingAmount), // fill complete taking amount
@@ -270,7 +272,7 @@ export class SimpleOrderFiller {
   /**
    * Estimate gas for filling an order
    */
-  async estimateGas(provider, orderHash) {
+  async estimateGas(provider, orderHash, signature) {
     try {
       const orderData = await getOrderDetails(orderHash);
       const orderStruct = this.parseOrderStruct(orderData);
@@ -279,7 +281,7 @@ export class SimpleOrderFiller {
       
       const gasEstimate = await contract.fillOrder.estimateGas(
         orderStruct,
-        orderData.signature,
+        signature,
         '0x',
         BigInt(orderData.data.makingAmount),
         BigInt(orderData.data.takingAmount)

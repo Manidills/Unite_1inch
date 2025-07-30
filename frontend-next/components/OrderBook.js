@@ -23,7 +23,7 @@ export default function OrderBook() {
     try {
       clearError();
       const signer = await provider.getSigner();
-      const fillResult = await fillOrder(signer, order.orderHash);
+      const fillResult = await fillOrder(signer, order.orderHash, order.signature);
       setResult(fillResult);
       console.log('Order filled successfully:', result);
 
