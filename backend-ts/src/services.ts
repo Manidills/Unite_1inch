@@ -417,3 +417,19 @@ export const getOrderHistory: Handler = async (req, res) => {
         res.status(500).json({ error: "Failed to insert order" });
     }
 }
+
+export const getOrderByOrderHash: Handler = async (req, res) => {
+    const { orderHash } = req.params
+    const url = `${config.oneInch.baseUrl}/orderbook/v4.0/1/order/${orderHash}`;
+    try {
+        const response = await axios.get(url, {
+            headers: {
+                Authorization: `Bearer ${config.oneInch.apiKey}`,
+            },
+        });
+        const data = response.data;
+        return res.status(200).json(data);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch order details" });
+    }
+}

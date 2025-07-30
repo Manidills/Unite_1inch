@@ -25,11 +25,8 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
             typedData.message
         )
 
-        console.log("message---------", typedData.message)
         const limitOrder = new LimitOrder(typedData.message); 
-        console.log("limitorder---------", limitOrder)
         const orderHash = limitOrder.getOrderHash(1);
-        console.log("limitorder---------", orderHash)
         const orderDetails = {
             orderHash,
             ...tradeInfo,

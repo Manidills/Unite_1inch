@@ -1,12 +1,13 @@
 // utils/orderFiller.js
 import { ethers } from 'ethers';
 import { useState, useCallback } from 'react';
+import { getOrderDetails } from '../helper/apiHelper';
 
-export const useOrderFiller = (chainId, authKey) => {
+export const useOrderFiller = (chainId) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
-  const filler = new SimpleOrderFiller(chainId, authKey);
+  const filler = new SimpleOrderFiller(chainId);
   
   const fillOrder = useCallback(async (signer, orderHash, options = {}) => {
     setLoading(true);
@@ -76,36 +77,13 @@ const ERC20_ABI = [
  * Simple Order Filler Class
  */
 export class SimpleOrderFiller {
-  constructor(chainId, authKey) {
+  constructor(chainId) {
     this.chainId = chainId;
-    this.authKey = authKey;
     this.contractAddress = LIMIT_ORDER_PROTOCOL_ADDRESSES[chainId];
     
     if (!this.contractAddress) {
       throw new Error(`Unsupported chain ID: ${chainId}`);
     }
-  }
-
-  /**
-   * Fetch order data from 1inch API
-   */
-  async fetchOrderData(orderHash) {
-    const apiUrl = `https://api.1inch.dev/orderbook/v4.0/${this.chainId}/order/${orderHash}`;
-    
-    const response = await fetch(apiUrl, {
-      headers: {
-        'Authorization': `Bearer ${this.authKey}`,
-        'Accept': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to fetch order: ${response.status} ${errorText}`);
-    }
-    
-    const result = await response.json();
-    return result;
   }
 
   /**
@@ -115,13 +93,13 @@ export class SimpleOrderFiller {
     return [
       orderData.makerAsset,                           // address makerAsset
       orderData.takerAsset,                           // address takerAsset
-      orderData.makingAmount,                         // uint256 makingAmount
-      orderData.takingAmount,                         // uint256 takingAmount
-      orderData.salt || '0',                          // uint256 salt
-      orderData.maker,                                // address maker
-      orderData.receiver || orderData.maker,         // address receiver
+      orderData.data.makingAmount,                         // uint256 makingAmount
+      orderData.data.takingAmount,                         // uint256 takingAmount
+      orderData.data.salt || '0',                          // uint256 salt
+      orderData.data.maker,                                // address maker
+      orderData.data.receiver || orderData.data.maker,         // address receiver
       orderData.allowedSender || ethers.ZeroAddress, // address allowedSender
-      orderData.makerTraits || '0',                   // uint256 makerTraits
+      orderData.data.makerTraits || '0',                   // uint256 makerTraits
       orderData.interactions || '0x'                  // bytes interactions
     ];
   }
@@ -182,7 +160,7 @@ export class SimpleOrderFiller {
     // Check remaining amount
     const remaining = await contract.remaining(orderHash);
     
-    if (remaining === 0n) {
+    if (remaining === BigInt(0)) {
       throw new Error('Order is fully filled or cancelled');
     }
     
@@ -201,12 +179,12 @@ export class SimpleOrderFiller {
       
       // Step 1: Fetch order data
       console.log('Fetching order data...');
-      const orderData = await this.fetchOrderData(orderHash);
+      const orderData = await getOrderDetails(orderHash);
       console.log('Order data received:', {
         makerAsset: orderData.makerAsset,
         takerAsset: orderData.takerAsset,
-        makingAmount: orderData.makingAmount,
-        takingAmount: orderData.takingAmount
+        makingAmount: orderData.data.makingAmount,
+        takingAmount: orderData.data.takingAmount
       });
       
       // Step 2: Validate order is still fillable
@@ -222,7 +200,7 @@ export class SimpleOrderFiller {
         provider,
         userAddress,
         orderData.takerAsset,
-        BigInt(orderData.takingAmount)
+        BigInt(orderData.data.takingAmount)
       );
       
       console.log('User requirements:', {
@@ -240,7 +218,7 @@ export class SimpleOrderFiller {
       // Step 5: Approve tokens if needed
       if (!requirements.hasAllowance) {
         console.log('Token approval required...');
-        await this.approveToken(signer, orderData.takerAsset, BigInt(orderData.takingAmount));
+        await this.approveToken(signer, orderData.takerAsset, BigInt(orderData.data.takingAmount));
         console.log('Token approval completed');
       } else {
         console.log('Token already approved');
@@ -263,8 +241,8 @@ export class SimpleOrderFiller {
         orderStruct,
         orderData.signature,
         '0x', // no interaction needed for simple fills
-        BigInt(orderData.makingAmount), // fill complete making amount
-        BigInt(orderData.takingAmount), // fill complete taking amount
+        BigInt(orderData.data.makingAmount), // fill complete making amount
+        BigInt(orderData.data.takingAmount), // fill complete taking amount
         txOptions
       );
       
@@ -280,7 +258,7 @@ export class SimpleOrderFiller {
         blockNumber: receipt.blockNumber,
         gasUsed: receipt.gasUsed.toString(),
         orderHash,
-        filledAmount: orderData.makingAmount
+        filledAmount: orderData.data.makingAmount
       };
       
     } catch (error) {
@@ -294,7 +272,7 @@ export class SimpleOrderFiller {
    */
   async estimateGas(provider, orderHash) {
     try {
-      const orderData = await this.fetchOrderData(orderHash);
+      const orderData = await getOrderDetails(orderHash);
       const orderStruct = this.parseOrderStruct(orderData);
       
       const contract = new ethers.Contract(this.contractAddress, LIMIT_ORDER_ABI, provider);
@@ -303,8 +281,8 @@ export class SimpleOrderFiller {
         orderStruct,
         orderData.signature,
         '0x',
-        BigInt(orderData.makingAmount),
-        BigInt(orderData.takingAmount)
+        BigInt(orderData.data.makingAmount),
+        BigInt(orderData.data.takingAmount)
       );
       
       return gasEstimate;

@@ -16,5 +16,6 @@ export const config = {
     rpc: {
         url: process.env.NEXT_PUBLIC_RPC_URL,
     },
-    chainId: 1
+    chainId: 1,
+    expiry: process.env.NEXT_PUBLIC_EXPIRY,
 };

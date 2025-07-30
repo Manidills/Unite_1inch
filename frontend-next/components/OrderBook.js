@@ -13,7 +13,7 @@ export default function OrderBook() {
   const [result, setResult] = useState(null);
   const [fillingOrderId, setFillingOrderId] = useState(null);
 
-  const { fillOrder, loading, clearError } = useOrderFiller(config.chainId, config.oneInch.apiKey);
+  const { fillOrder, loading, clearError } = useOrderFiller(config.chainId);
   const handleFillOrder = async (order) => {
     if (!provider) {
       alert('Please connect your wallet');

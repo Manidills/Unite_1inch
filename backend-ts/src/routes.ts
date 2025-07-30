@@ -11,6 +11,7 @@ import {
     insertOrder,
     getAllOrders,
     getOrderHistory,
+    getOrderByOrderHash,
 } from './services';
 
 router.post('/login', userLogin);
@@ -19,6 +20,7 @@ router.get('/tokens', getAllTokens);
 router.get('/prices', getTokenPrices);
 router.get('/gasFee', getGasFee);
 router.get('/limit-orders-by-address', getAllLimitOrdersByAddress);
+router.get('/order-by-hash/:orderHash', getOrderByOrderHash);
 router.post('/order', createOrder);
 router.post('/insert-order', insertOrder);
 router.get('/order-by-address', getAllOrders)

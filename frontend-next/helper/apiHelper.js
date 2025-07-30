@@ -10,6 +10,7 @@ const ORDER_URL = `${config.api.baseUrl}/api/order`;
 const INSERT_ORDER_URL = `${config.api.baseUrl}/api/insert-order`;
 const USER_ORDER_URL = `${config.api.baseUrl}/api/order-by-address`;
 const ORDER_HISTORY_URL = `${config.api.baseUrl}/api/order-history`;
+const ORDER_DETAILS_URL = `${config.api.baseUrl}/api/order-by-hash`;
 
 const HEADERS = {
     Authorization: `Bearer ${config.oneInch.apiKey}`,
@@ -166,6 +167,19 @@ export async function login(address) {
         return;
     } catch (error) {
         console.error('failed to insert record into db', error);
+        return [];
+    }
+}
+
+export async function getOrderDetails(orderHash) {
+    try {
+        const apiResponse = await fetch(`${ORDER_DETAILS_URL}/${orderHash}`, {
+            headers: HEADERS,
+        });
+        const result = await apiResponse.json();
+        return result;
+    } catch (error) {
+        console.error('Failed to fetch user orders', error);
         return [];
     }
 }
