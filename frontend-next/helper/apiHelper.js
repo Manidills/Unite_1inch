@@ -13,6 +13,7 @@ const USER_ORDER_URL = `${config.api.baseUrl}/api/order-by-address`;
 const ORDER_HISTORY_URL = `${config.api.baseUrl}/api/order-history`;
 const ORDER_DETAILS_URL = `${config.api.baseUrl}/api/order-by-hash`;
 const PORTFOLIO_URL = `${config.api.baseUrl}/api/portfolio/tokens`;
+const TRIGGER_URL = `${config.api.baseUrl}/api/trigger`;
 
 const HEADERS = {
     Authorization: `Bearer ${config.oneInch.apiKey}`,
@@ -250,13 +251,26 @@ export async function getOrderIntent(message, account) {
 
 export async function insertTrigger(trigger) {
     try {
-        const apiResponse = await fetch(intentUrl, {
+        const apiResponse = await fetch(TRIGGER_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
             body: JSON.stringify(trigger),
+        });
+        const result = await apiResponse.json();
+        return result;
+    } catch (error) {
+        console.error('Failed to fetch user orders', error);
+        return [];
+    }
+}
+
+export async function getUserTriggers(walletAddress) {
+    try {
+        const apiResponse = await fetch(`${USER_TRIGGERS_URL}?walletAddress=${walletAddress}`, {
+            headers: HEADERS,
         });
         const result = await apiResponse.json();
         return result;

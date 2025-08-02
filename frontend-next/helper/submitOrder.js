@@ -14,7 +14,7 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
         
         const signer = await provider.getSigner();
         const walletAddress = await signer.getAddress();
-        if (currentValue < targetValue){
+        if (parseFloat(currentValue) < parseFloat(targetValue)){
             const trigger = {
                 makerAsset: orderInfo.makerAsset.toString(),
                 takerAsset: orderInfo.takerAsset.toString(),
@@ -24,9 +24,13 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
                 receiver: orderInfo.receiver.toString(),
                 status: 'open',
                 targetValue: targetValue,
-                walletId: walletAddress,
+                walletId: walletAddress.toString().toLowerCase(),
             }
-            return await insertTrigger(trigger)
+            await insertTrigger(trigger)
+            return {
+                status: true,
+                type: 'trigger'
+            }
         }
         const making = new Address(makerAsset);
 
@@ -79,9 +83,15 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
         }
         const insertedOrder = await insertOrder(orderBody)
         if (!insertedOrder) {
-            return false
+            return {
+                success: fail,
+                type: 'order'
+            }
         }
-        return true
+        return {
+            success: true,
+            type: 'order' 
+        }
     } catch (error) {
         console.log(error)
         return false

@@ -14,6 +14,7 @@ import {
     getOrderByOrderHash,
     getPortfolioTokens,
     insertTrigger,
+    getTriggerOrders,
 } from './services';
 
 router.post('/login', userLogin);
@@ -29,5 +30,6 @@ router.get('/order-by-address', getAllOrders)
 router.get('/order-history', getOrderHistory)
 router.get('/portfolio/tokens', getPortfolioTokens)
 router.post('/trigger', insertTrigger)
+router.get('/trigger', getTriggerOrders)
 
 export default router;

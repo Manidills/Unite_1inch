@@ -479,3 +479,31 @@ export const insertTrigger: Handler = async (req, res) => {
         res.status(500).json({ error: "Failed to insert order" });
     }
 }
+
+export const getTriggerOrders: Handler = async (req, res) => {
+    const { walletAddress } = req.query
+    try {
+        const result = await prisma.triggers.findMany({
+            where: {
+                walletId: {
+                    not: walletAddress?.toString().toLowerCase()
+                },
+            },
+        });
+
+        if (!result) {
+            return res.status(400).json({
+                success: false,
+                error: 'Failed to fetch trigger orders'
+            })
+        }
+        return res.status(200).json({
+            success: true,
+            message: "triggers fetched successfully",
+            data: result
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Failed to fetch triggers" });
+    }
+}

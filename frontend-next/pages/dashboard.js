@@ -8,9 +8,11 @@ import OrderHistory from '../components/OrderHistory';
 import OrderBook from '../components/OrderBook';
 import Balance from '../components/Balance';
 import CrossChainSwap from '../components/CrossChainSwap';
+import Triggers from '../components/Triggers';
 
 const TABS = {
   CHAT: 'Chat',
+  TRIGGERS: 'Triggers',
   ORDER_HISTORY: 'OrderHistory',
   ORDER_BOOK: 'OrderBook',
   BALANCE: 'Balance',
@@ -37,6 +39,8 @@ export default function Dashboard() {
     switch (activeTab) {
       case TABS.CHAT:
         return <ChatPanel />;
+      case TABS.TRIGGERS:
+        return <Triggers />;
       case TABS.ORDER_HISTORY:
         return <OrderHistory />;
       case TABS.ORDER_BOOK:
@@ -113,6 +117,11 @@ export default function Dashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
                     )}
+                    {tab === TABS.TRIGGERS && (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
                     {tab === TABS.ORDER_HISTORY && (
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -169,6 +178,7 @@ export default function Dashboard() {
                 </h2>
                 <p className="text-gray-600">
                   {activeTab === TABS.CHAT && "Chat with our AI assistant for trading insights and support"}
+                  {activeTab === TABS.TRIGGERS && "Your trigger orders will be ready to be created once market value matched"}
                   {activeTab === TABS.ORDER_HISTORY && "View your complete trading history and transaction details"}
                   {activeTab === TABS.ORDER_BOOK && "Real-time market depth and order book data"}
                   {activeTab === TABS.BALANCE && "Monitor your wallet balance and asset holdings"}
