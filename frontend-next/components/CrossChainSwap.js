@@ -1168,323 +1168,243 @@ export default function CrossChainSwap() {
   const isNetworkCorrect = currentNetwork === currentStepConfig?.network;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <div></div>
-          <h2 className="text-3xl font-bold text-gray-800">
-            🚀 1inch Fusion+ Cross-Chain Extension
-          </h2>
-          <button
-            onClick={resetDemo}
-            className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Reset Demo
-          </button>
-        </div>
-        <p className="text-gray-600">
-          First-ever Ethereum ↔ Polkadot atomic swap using 1inch architecture
-        </p>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="mb-8">
-        <div className="flex justify-between text-xs text-gray-500 mb-2">
-          <span>Progress</span>
-          <span>{completedSteps.size} / {SWAP_STEPS.length} steps</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
-          <div 
-            className="bg-gradient-to-r from-blue-600 to-purple-600 h-3 rounded-full transition-all duration-500"
-            style={{ width: `${(completedSteps.size / SWAP_STEPS.length) * 100}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Current Network Status */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="font-semibold">Current Network</h3>
-            <p className="text-sm text-gray-600">
-              Connected to: {NETWORKS[currentNetwork]?.name || 'Unknown'}
-            </p>
-          </div>
-          <div className="flex space-x-2">
+    <div className="max-w-2xl mx-auto">
+      {/* Main Swap Interface */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-800">Cross-Chain Swap</h2>
             <button
-              onClick={() => switchNetwork('sepolia')}
-              className={`px-3 py-1 text-xs rounded ${
-                currentNetwork === 'sepolia' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+              onClick={resetDemo}
+              className="px-3 py-1 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
             >
-              Sepolia
-            </button>
-            <button
-              onClick={() => switchNetwork('moonbeam')}
-              className={`px-3 py-1 text-xs rounded ${
-                currentNetwork === 'moonbeam' 
-                  ? 'bg-purple-500 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Moonbeam
+              Reset
             </button>
           </div>
+          <p className="text-sm text-gray-600 mt-1">
+            Ethereum ↔ Polkadot • Powered by 1inch Fusion+
+          </p>
         </div>
-      </div>
 
-      {/* Swap Configuration */}
-      <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-        <h3 className="font-semibold mb-4">1inch Fusion+ Cross-Chain Swap</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{swapAmount}</div>
-            <div className="text-sm text-gray-600">TUSDC</div>
-            <div className="text-xs text-gray-500">From Sepolia</div>
-          </div>
-          <div className="flex items-center justify-center">
-            <div className="text-2xl">⚡</div>
-          </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">{fusionQuote ? (parseFloat(ethers.formatUnits(fusionQuote.dstAmount, 6))).toFixed(2) : swapAmount}</div>
-            <div className="text-sm text-gray-600">TUSDC</div>
-            <div className="text-xs text-gray-500">To Moonbeam</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Fusion+ Quote Display */}
-      {fusionQuote && (
-        <div className="mb-8 p-6 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
-          <h3 className="font-semibold mb-4 flex items-center">
-            🔥 1inch Fusion+ Quote
-            <span className="ml-2 px-2 py-1 text-xs bg-orange-500 text-white rounded-full">ACTIVE</span>
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div className="bg-white p-3 rounded">
-              <div className="font-medium text-gray-700">You Send</div>
-              <div className="text-lg font-bold text-blue-600">
-                {parseFloat(ethers.formatUnits(fusionQuote.srcAmount, 6)).toFixed(2)} TUSDC
+        {/* Swap Interface */}
+        <div className="p-6">
+          {/* From Token */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">From</span>
+              <span className="text-xs text-gray-500">{NETWORKS[currentNetwork]?.name || 'Unknown'}</span>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={swapAmount}
+                    onChange={(e) => setSwapAmount(e.target.value)}
+                    className="w-full text-2xl font-bold bg-transparent border-none outline-none text-gray-800"
+                    placeholder="0"
+                  />
+                  <div className="text-sm text-gray-500 mt-1">≈ ${swapAmount}</div>
+                </div>
+                <div className="flex items-center space-x-2 bg-white rounded-lg px-3 py-2">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">T</span>
+                  </div>
+                  <span className="font-medium text-gray-800">TUSDC</span>
+                </div>
               </div>
             </div>
-            <div className="bg-white p-3 rounded">
-              <div className="font-medium text-gray-700">You Receive</div>
-              <div className="text-lg font-bold text-purple-600">
-                {parseFloat(ethers.formatUnits(fusionQuote.dstAmount, 6)).toFixed(2)} TUSDC
-              </div>
-            </div>
-            <div className="bg-white p-3 rounded">
-              <div className="font-medium text-gray-700">Est. Time</div>
-              <div className="text-lg font-bold text-green-600">{fusionQuote.estimatedTime}</div>
-            </div>
-            <div className="bg-white p-3 rounded">
-              <div className="font-medium text-gray-700">Network Route</div>
-              <div className="text-sm font-bold text-gray-600">Sepolia → Moonbeam</div>
+          </div>
+
+          {/* Swap Arrow */}
+          <div className="flex justify-center mb-4">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
             </div>
           </div>
-          <div className="mt-4 p-3 bg-orange-100 rounded text-xs">
-            💡 <strong>Fusion+ Features:</strong> Dutch Auction, MEV Protection, Cross-Chain Settlement, Atomic Swaps
-          </div>
-        </div>
-      )}
 
-      {/* Current Step */}
-      {currentStepConfig && currentStep < SWAP_STEPS.length && (
-        <div className="mb-6">
-          <div className={`p-6 rounded-lg border-2 transition-all ${
-            isNetworkCorrect 
-              ? 'border-blue-200 bg-blue-50' 
-              : 'border-yellow-200 bg-yellow-50'
-          }`}>
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-800">
-                  Step {currentStep + 1}: {currentStepConfig.title}
-                </h3>
-                <p className="text-gray-600 mt-1">{currentStepConfig.description}</p>
-              </div>
-              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                currentStepConfig.network === 'sepolia'
-                  ? 'bg-blue-100 text-blue-800'
-                  : 'bg-purple-100 text-purple-800'
-              }`}>
-                {NETWORKS[currentStepConfig.network]?.name}
+          {/* To Token */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">To</span>
+              <span className="text-xs text-gray-500">Moonbeam</span>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="text-2xl font-bold text-gray-800">
+                    {fusionQuote ? (parseFloat(ethers.formatUnits(fusionQuote.dstAmount, 6))).toFixed(2) : swapAmount}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">≈ ${fusionQuote ? (parseFloat(ethers.formatUnits(fusionQuote.dstAmount, 6))).toFixed(2) : swapAmount}</div>
+                </div>
+                <div className="flex items-center space-x-2 bg-white rounded-lg px-3 py-2">
+                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">T</span>
+                  </div>
+                  <span className="font-medium text-gray-800">TUSDC</span>
+                </div>
               </div>
             </div>
+          </div>
 
-            {!isNetworkCorrect && (
-              <div className="mb-4 p-3 bg-yellow-100 border border-yellow-300 rounded-md">
-                <p className="text-sm text-yellow-800">
-                  ⚠️ Please switch to {NETWORKS[currentStepConfig.network]?.name} to continue
-                </p>
-                <button
-                  onClick={() => switchNetwork(currentStepConfig.network)}
-                  className="mt-2 px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
-                >
-                  Switch Network
-                </button>
+          {/* Quote Info */}
+          {fusionQuote && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Estimated Time</span>
+                <span className="font-medium text-gray-800">{fusionQuote.estimatedTime}</span>
               </div>
-            )}
+              <div className="flex items-center justify-between text-sm mt-2">
+                <span className="text-gray-600">Network Fee</span>
+                <span className="font-medium text-gray-800">~$2.50</span>
+              </div>
+              <div className="flex items-center mt-3 text-xs text-blue-600">
+                <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                MEV Protection • Dutch Auction • Atomic Settlement
+              </div>
+            </div>
+          )}
 
+          {/* Network Status */}
+          {!isNetworkCorrect && currentStepConfig && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center text-sm text-yellow-800">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                Switch to {NETWORKS[currentStepConfig.network]?.name} to continue
+              </div>
+            </div>
+          )}
+
+          {/* Main Action Button */}
+          {currentStep >= SWAP_STEPS.length ? (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+              <div className="flex items-center text-green-800">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="font-medium">Swap Completed!</span>
+              </div>
+              <p className="text-sm text-green-700 mt-2">
+                Successfully swapped {swapAmount} TUSDC from Sepolia to Moonbeam
+              </p>
+            </div>
+          ) : (
             <button
               onClick={() => executeStep(currentStep)}
               disabled={isLoading || !isNetworkCorrect || isStepCompleted}
-              className={`w-full py-3 px-4 rounded-md font-medium transition-colors ${
+              className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all ${
                 isStepCompleted
                   ? 'bg-green-500 text-white cursor-default'
                   : isLoading || !isNetworkCorrect
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  ? 'bg-gray-400 text-white cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02]'
               }`}
             >
               {isStepCompleted 
-                ? '✅ Completed' 
+                ? '✅ Step Completed' 
                 : isLoading 
-                ? '⏳ Processing...' 
-                : `Execute Step ${currentStep + 1}`
+                ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                    Processing...
+                  </div>
+                )
+                : currentStepConfig?.title || 'Start Swap'
               }
             </button>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Success Message */}
-      {currentStep >= SWAP_STEPS.length && (
-        <div className="mb-6 p-6 bg-green-50 border border-green-200 rounded-lg">
-          <h3 className="text-xl font-bold text-green-800 mb-2">
-            🎉 Cross-Chain Swap Completed!
-          </h3>
-          <p className="text-green-700 mb-4">
-            Successfully swapped {swapAmount} TUSDC from Sepolia to Moonbeam using 1inch Fusion+ architecture
-          </p>
-          <div className="bg-white p-4 rounded border-l-4 border-green-500">
-            <h4 className="font-semibold mb-2">🔍 Verify Your Transfer:</h4>
-            <div className="text-sm space-y-2">
-              <div>
-                <strong>Sepolia TUSDC:</strong> <code className="bg-gray-100 px-2 py-1 rounded text-xs">{NETWORKS.sepolia.token}</code>
-              </div>
-              <div>
-                <strong>Moonbeam TUSDC:</strong> <code className="bg-gray-100 px-2 py-1 rounded text-xs">{NETWORKS.moonbeam.token}</code>
-              </div>
-              <div className="mt-3">
-                <p className="text-gray-600">Check your wallet balance or add these tokens to MetaMask to see the transferred TUSDC.</p>
-              </div>
-            </div>
+          {/* Progress Indicator */}
+          <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
+            <span>Step {Math.min(currentStep + 1, SWAP_STEPS.length)} of {SWAP_STEPS.length}</span>
+            <span>{Math.round((completedSteps.size / SWAP_STEPS.length) * 100)}% Complete</span>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${(completedSteps.size / SWAP_STEPS.length) * 100}%` }}
+            />
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Advanced Details (Collapsible) */}
+      <div className="mt-6">
+        <details className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <summary className="px-6 py-4 cursor-pointer font-medium text-gray-700 hover:text-gray-900">
+            Advanced Details & Transaction History
+          </summary>
+          <div className="px-6 pb-6 border-t border-gray-100">
+            {/* Current Step Details */}
+            {currentStepConfig && currentStep < SWAP_STEPS.length && (
+              <div className="mb-4">
+                <h4 className="font-medium text-gray-800 mb-2">Current Step</h4>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-sm font-medium text-gray-700">{currentStepConfig.title}</div>
+                  <div className="text-sm text-gray-600 mt-1">{currentStepConfig.description}</div>
+                  <div className="text-xs text-gray-500 mt-2">
+                    Network: {NETWORKS[currentStepConfig.network]?.name}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Transaction History */}
+            {Object.keys(transactions).length > 0 && (
+              <div>
+                <h4 className="font-medium text-gray-800 mb-2">Transaction History</h4>
+                <div className="space-y-2">
+                  {Object.entries(transactions).map(([key, hash]) => (
+                    <div key={key} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg text-sm">
+                      <span className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                      <code className="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                        {hash.slice(0, 10)}...{hash.slice(-8)}
+                      </code>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </details>
+      </div>
 
       {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <h4 className="font-medium text-red-800">Error:</h4>
-          <p className="text-sm text-red-700 mt-1">{error}</p>
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+          <div className="flex items-center text-red-800 mb-2">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="font-medium">Transaction Error</span>
+          </div>
+          <p className="text-sm text-red-700">{error}</p>
           
-          {/* Special handling for different error types */}
-          {(error.includes('Order expired') || error.includes('expired')) && (
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-              <h5 className="text-sm font-medium text-yellow-800 mb-2">🔧 Solution Options:</h5>
-              <div className="space-y-2">
-                <button
-                  onClick={resetDemo}
-                  className="w-full px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  🔄 Start Fresh Demo (Create New Order)
-                </button>
-                <button
-                  onClick={restartFromMoonbeamOrder}
-                  className="w-full px-3 py-2 text-sm bg-yellow-600 text-white rounded hover:bg-yellow-700"
-                >
-                  ⚡ Skip to Step 7 (Continue Existing Swap)
-                </button>
-                <p className="text-xs text-yellow-700">
-                  💡 The order expired because auction duration (24h) was too short. The new demo uses 7-day duration.
-                </p>
-              </div>
-            </div>
-          )}
-          
-          {/* Special handling for getOrder / validation errors */}
-          {(error.includes('could not decode result data') || error.includes('BAD_DATA') || error.includes('Cannot proceed')) && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
-              <h5 className="text-sm font-medium text-blue-800 mb-2">🔧 Network/Validation Issue:</h5>
-              <div className="space-y-2">
-                <button
-                  onClick={skipValidationAndProceed}
-                  className="w-full px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                  🚀 Skip Validation & Continue
-                </button>
-                <button
-                  onClick={resetDemo}
-                  className="w-full px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  🔄 Start Fresh Demo
-                </button>
-                <p className="text-xs text-blue-700">
-                  💡 This error often occurs due to network switching issues. Skipping validation will proceed without checking the Sepolia order.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Transaction History */}
-      {Object.keys(transactions).length > 0 && (
-        <div className="mt-8">
-          <h3 className="font-semibold mb-4">Transaction History</h3>
-          <div className="space-y-2">
-            {Object.entries(transactions).map(([key, hash]) => (
-              <div key={key} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <span className="text-sm font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                <span className="text-xs font-mono text-blue-600">{hash.slice(0, 10)}...{hash.slice(-8)}</span>
-              </div>
-            ))}
+          <div className="mt-3 flex space-x-2">
+            <button
+              onClick={resetDemo}
+              className="px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Reset
+            </button>
+            {(error.includes('expired') || error.includes('validation')) && (
+              <button
+                onClick={restartFromMoonbeamOrder}
+                className="px-3 py-1 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+              >
+                Continue Anyway
+              </button>
+            )}
           </div>
         </div>
       )}
-
-      {/* Architecture Highlights */}
-      <div className="mt-8 p-6 bg-gradient-to-r from-gray-50 to-orange-50 rounded-lg border border-orange-200">
-        <h3 className="font-semibold mb-4 text-gray-800 flex items-center">
-          🏆 1inch Fusion+ Cross-Chain Innovation
-          <span className="ml-2 px-2 py-1 text-xs bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full">NEW</span>
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div>
-            <h4 className="font-medium text-gray-700 mb-2">🔥 Fusion+ Features:</h4>
-            <ul className="space-y-1 text-gray-600">
-              <li>✅ Dutch auction mechanisms</li>
-              <li>✅ MEV protection with resolvers</li>
-              <li>✅ Atomic cross-chain swaps</li>
-              <li>✅ Hashlock/Timelock security</li>
-              <li>✅ Bidirectional ETH ↔ DOT</li>
-              <li>✅ Partial fills support</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-700 mb-2">🌟 Market Impact:</h4>
-            <ul className="space-y-1 text-gray-600">
-              <li>🌐 First Fusion+ cross-chain extension</li>
-              <li>💰 Opens $50B+ cross-chain market</li>
-              <li>🔒 Production-ready on testnets</li>
-              <li>🚀 Extends 1inch Fusion+ ecosystem</li>
-              <li>⚡ 5-10 minute cross-chain settlement</li>
-              <li>🎯 Built for hackathon innovation</li>
-            </ul>
-          </div>
-        </div>
-        <div className="mt-4 p-3 bg-orange-100 rounded">
-          <p className="text-sm text-orange-800">
-            <strong>🎉 Hackathon Achievement:</strong> Successfully integrated 1inch Fusion+ SDK with cross-chain atomic swaps, 
-            preserving hashlock/timelock functionality for non-EVM (Polkadot) implementation while maintaining bidirectional swap capabilities.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

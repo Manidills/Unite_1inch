@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 
     const response = await fetch(apiUrl, {
       headers: {
-        'Authorization': `Bearer ${process.env.ONE_INCH_API_KEY}`,
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ONE_INCH_API_KEY}`,
         'Accept': 'application/json'
       }
     });
