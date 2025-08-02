@@ -9,9 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@1inch/fusion-sdk": "^2.3.6",
     "@1inch/limit-order-sdk": "^5.0.3",
+    "axios": "^1.11.0",
     "dotenv": "^17.2.1",
-    "ethers": "^6.8.0",
+    "ethers": "^6.15.0",
     "lucide-react": "^0.536.0",
     "next": "14.0.0",
     "react": "^18",

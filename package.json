@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@1inch/fusion-sdk": "^2.3.6",
+    "ethers": "^6.15.0"
+  }
+}
