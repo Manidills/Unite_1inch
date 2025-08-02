@@ -75,16 +75,16 @@ graph TB
     end
     
     subgraph "Blockchain Networks"
-        J --> L[Ethereum Sepolia]
-        J --> M[Moonbeam Polkadot]
+        J --> L[Chain 1]
+        J --> M[Chain 2]
         K --> L
     end
     
     subgraph "Smart Contracts"
-        L --> N[Bridge Contract: 0x89c0...]
-        L --> O[TestToken TUSDC: 0x815c...]
-        M --> P[Bridge Contract: 0x357c...]
-        M --> Q[TestToken TUSDC: 0x810969...]
+        L --> N[Bridge Contract]
+        L --> O[Token Contracts]
+        M --> P[Bridge Contract]
+        M --> Q[Token Contracts]
     end
 ```
 
@@ -107,17 +107,20 @@ graph TB
 - Machine learning algorithms for optimal execution timing
 - Risk assessment and portfolio optimization
 
-## 🌉 Cross-Chain Bridge Implementation
+## 🌉 Cross-Chain Extension for 1inch
 
-### Ethereum ↔ Polkadot Bridge
-Our implementation extends 1inch Fusion+ with bidirectional cross-chain functionality:
+### Seamless Multi-Chain Integration
+Our cross-chain extension integrates directly with 1inch SDK to provide smooth, bidirectional swaps across any blockchain networks. This extension can be seamlessly integrated into 1inch's existing infrastructure using their SDK framework.
 
 #### Core Features:
+- **1inch SDK Integration**: Native extension that plugs into existing 1inch infrastructure
 - **Hashlock/Timelock Security**: Cryptographic guarantees for safe cross-chain transfers
 - **Partial Fills**: Support for partial order execution across chains
 - **Automated Relaying**: Seamless bridging without manual intervention
+- **Universal Chain Support**: Designed to work with any EVM and non-EVM chains
 
-#### Contract Addresses:
+#### Hackathon Demo Implementation:
+For this hackathon, we've deployed our cross-chain extension on **Sepolia (Ethereum)** and **Moonbeam (Polkadot parachain)** testnets to demonstrate the functionality:
 
 | Network | Contract Type | Address |
 |---------|---------------|---------|
@@ -125,6 +128,8 @@ Our implementation extends 1inch Fusion+ with bidirectional cross-chain function
 | **Sepolia (Ethereum)** | TestToken (TUSDC) | `0x815c15e1ed2b70f3a5efe6161665186195ec03ea` |
 | **Moonbeam (Polkadot)** | Bridge Contract | `0x357cdd71eba4a36d5af66d0fc9c8061bed22f86d` |
 | **Moonbeam (Polkadot)** | TestToken (TUSDC) | `0x810968973610bcbfa625e2138fa480a0fa656b7d` |
+
+> **Note**: This testnet implementation demonstrates our cross-chain extension capabilities. In production phases, this same architecture will support all major L1s and L2s.
 
 ## 📊 1inch API Integration & Revenue Model
 
@@ -135,7 +140,7 @@ Our implementation extends 1inch Fusion+ with bidirectional cross-chain function
 | **Swap APIs** | Fusion+, Classic Swap, Limit Orders | Direct volume increase |
 | **Data APIs** | Price feeds, Balances, Token metadata | Enhanced UX → Retention |
 | **Web3 API** | Transaction posting, Gas optimization | Reduced user costs |
-| **Cross-Chain** | Fusion+ extension | New market creation |
+| **Cross-Chain** | 1inch SDK extension | New market creation |
 
 ### Revenue Generation for 1inch:
 
@@ -198,17 +203,19 @@ Our implementation extends 1inch Fusion+ with bidirectional cross-chain function
 - ✅ Order book integration
 - ✅ Basic dashboard interface
 
-### Phase 2: Feature Expansion (Q1 2025)
+### Phase 2: Multi-Chain Expansion (Q1 2025)
+- **All Major L2s**: Arbitrum, Optimism, Polygon, Base, Avalanche
+- **Additional L1s**: BNB Chain, Fantom, Solana integration
 - Advanced AI strategies (DCA, yield farming, arbitrage)
 - Mobile application for broader accessibility
-- Integration with additional 1inch features
 - Enhanced analytics and reporting
 
-### Phase 3: Ecosystem Growth (Q2 2025)
-- Third-party strategy marketplace
-- Advanced relayer tools and incentives
+### Phase 3: Complete Ecosystem (Q2 2025)
+- **Universal Chain Support**: All EVM and major non-EVM chains
+- **Integrated Order Book**: Cross-chain order matching and execution
+- Third-party strategy marketplace with multi-chain strategies
+- Advanced relayer tools and cross-chain arbitrage incentives
 - Institutional features and API access
-- Multi-chain expansion beyond Ethereum/Polkadot
 
 ## 💰 Financial Projections & 1inch Impact
 
