@@ -7,6 +7,7 @@ export const config = {
         baseUrl: process.env.NEXT_PUBLIC_ONE_INCH_BASE_URL,
         allowanceTarget: '0x111111125421ca6dc452d289314280a0f8842a65',
         proxy: process.env.NEXT_PUBLIC_VERCEL_PROXY,
+        aggregationRouter: '0x1111111254EEB25477B68fb85Ed929f73A960582'
 
     },
     wallet: {

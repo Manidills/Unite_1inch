@@ -21,6 +21,19 @@ const HEADERS = {
     'Content-Type': 'application/json',
 };
 
+export async function getSwapQuote(chainId, fromToken, toToken, amount) {
+    try {
+      const url = `https://api.1inch.io/v5.0/${chainId}/quote?fromTokenAddress=${fromToken}&toTokenAddress=${toToken}&amount=${amount}`;
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${config.oneInch.apiKey}` }
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get swap quote', error);
+      return null;
+    }
+  }
+
 export async function getTokensWithPrices(symbols = []) {
     try {
         const tokenRes = await fetch(TOKEN_LIST_URL, { headers: HEADERS });
