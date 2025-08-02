@@ -12,6 +12,7 @@ import {
     getAllOrders,
     getOrderHistory,
     getOrderByOrderHash,
+    getPortfolioTokens,
 } from './services';
 
 router.post('/login', userLogin);
@@ -25,5 +26,6 @@ router.post('/order', createOrder);
 router.post('/insert-order', insertOrder);
 router.get('/order-by-address', getAllOrders)
 router.get('/order-history', getOrderHistory)
+router.get('/portfolio/tokens', getPortfolioTokens)
 
 export default router;

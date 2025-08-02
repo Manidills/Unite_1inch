@@ -436,3 +436,22 @@ export const getOrderByOrderHash: Handler = async (req, res) => {
         res.status(500).json({ error: "Failed to fetch order details" });
     }
 }
+
+export const getPortfolioTokens: Handler = async (req, res) => {
+    const { chainId, address } = req.query
+    const url = `${config.oneInch.baseUrl}/portfolio/portfolio/v5.0/tokens/snapshot?addresses=${address}&chain_id=${chainId}`;
+    try {
+        const response = await axios.get(url, {
+            headers: {
+                Authorization: `Bearer ${config.oneInch.apiKey}`,
+                "Content-Type": "application/json"
+            }
+        });
+        const data = response.data;
+        const tokens = data.result.flatMap((item: { underlying_tokens: any; }) => item.underlying_tokens || [])
+        return res.status(200).json(tokens);
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Failed to fetch portfolio details" });
+    }
+}
