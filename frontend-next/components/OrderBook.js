@@ -1,8 +1,26 @@
 import { useState, useEffect } from 'react';
 import { getOrderHistory } from '../helper/apiHelper';
 import { useWallet } from '../contexts/WalletContext';
-import { useOrderFiller } from '../helper/fill';
+import { useSwap } from '../helper/swapHelper'; // New swap helper
 import { config } from '../config';
+import { ethers } from 'ethers';  // Add this with your other imports
+
+// Add this with your other imports at the top of OrderBook.jsx
+const tokenMap = {
+  WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', // Mainnet WETH
+  USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // Mainnet USDC
+  // Add other tokens as needed
+};
+
+// Add this function right after the tokenMap
+function getTokenAddresses(symbols) {
+  return symbols.reduce((acc, symbol) => {
+    acc[symbol] = tokenMap[symbol];
+    return acc;
+  }, {});
+}
+
+
 
 export default function OrderBook() {
   const { account, provider } = useWallet();
@@ -11,30 +29,62 @@ export default function OrderBook() {
   const [filter, setFilter] = useState('all');
   const [copiedHash, setCopiedHash] = useState(null);
   const [result, setResult] = useState(null);
-  const [fillingOrderId, setFillingOrderId] = useState(null);
+  const [swappingOrderId, setSwappingOrderId] = useState(null); // Renamed from fillingOrderId
 
-  const { fillOrder, loading, clearError } = useOrderFiller(config.chainId);
-  const handleFillOrder = async (order) => {
+  // Use the new swap hook
+  const { swapTokens, loading: swapLoading } = useSwap();
+
+  const handleSwapOrder = async (order) => {
     if (!provider) {
       alert('Please connect your wallet');
       return;
     }
-    setFillingOrderId(order.id);
+  
+    setSwappingOrderId(order.id);
+  
     try {
-      clearError();
       const signer = await provider.getSigner();
-      const fillResult = await fillOrder(signer, order.orderHash, order.signature);
-      setResult(fillResult);
-      console.log('Order filled successfully:', result);
-
-      // You can show success message or redirect
-      alert(`Order filled successfully! Tx: ${fillResult.transactionHash}`);
-
-    } catch (err) {
-      console.error('Fill failed:', err);
-      alert(`Fill failed: ${err.message}`);
+      const fromAddress = await signer.getAddress();
+  
+      // 1. Parse token pair and amounts correctly
+      const [fromTokenSymbol, toTokenSymbol] = order.tokenPair.split('/');
+      const [fromAmount] = order.youReceive.split(' '); // "0.000300 WETH" → "0.000300"
+      const [toAmount] = order.amount.split(' ');       // "1 USDC" → "1"
+  
+      // 2. Token addresses (mainnet)
+      const tokenAddresses = {
+        WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+        USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+      };
+  
+      // 3. CORRECTED: Map tokens to swap direction
+      const swapParams = {
+        fromToken: tokenAddresses[fromTokenSymbol], // WETH address
+        toToken: tokenAddresses[toTokenSymbol],     // USDC address
+        amount: ethers.parseUnits(
+          fromAmount, 
+          fromTokenSymbol === 'WETH' ? 18 : 6
+        ).toString(),
+        fromAddress: fromAddress,
+        slippage: 1,
+        receiver: fromAddress
+      };
+  
+      console.log('Swap params:', {
+        paying: `${fromAmount} ${fromTokenSymbol}`,
+        receiving: `${toAmount} ${toTokenSymbol}`,
+        ...swapParams
+      });
+  
+      const result = await swapTokens(signer, swapParams);
+      alert(`✅ Swapped ${fromAmount} ${fromTokenSymbol} → ${toAmount} ${toTokenSymbol}\nTX: ${result.transactionHash}`);
+      return result;
+    } catch (error) {
+      console.error('Swap failed:', error);
+      alert(`❌ Swap failed: ${error.message}`);
+      throw error;
     } finally {
-      setFillingOrderId(null)
+      setSwappingOrderId(null);
     }
   };
 
@@ -45,27 +95,29 @@ export default function OrderBook() {
   };
 
   useEffect(() => {
-    const fetchOrderHistory = async () => {
-      setIsLoading(true);
-      try {
-        const apiResponse = await getOrderHistory(account);
+    // Update your fetchOrderHistory function to include this transformation
+const fetchOrderHistory = async () => {
+    setIsLoading(true);
+    try {
+      const apiResponse = await getOrderHistory(account);
 
-        if (apiResponse.success && apiResponse.data.length > 0) {
-          setOrders(apiResponse.data);
-        } else if (!apiResponse.success) {
-          alert('Failed to fetch user orders. Please try again later.');
-        } else {
-          // Optional: clear or show empty state
-          setOrders([]);
-        }
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-        alert('Something went wrong. Please check your connection and try again.');
-      } finally {
-        setIsLoading(false);
+      if (apiResponse.success && apiResponse.data.length > 0) {
+        setOrders(apiResponse.data.map(order => ({
+          ...order,
+          // Add raw numeric values while preserving display strings
+          rawYouReceive: parseFloat(order.youReceive.split(' ')[0]),
+          rawAmount: parseFloat(order.amount.split(' ')[0]),
+          // Original display values remain unchanged
+          youReceive: order.youReceive,
+          amount: order.amount
+        })));
       }
-    };
-
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
     fetchOrderHistory();
   }, [account]);
 
@@ -174,14 +226,14 @@ export default function OrderBook() {
                   <td className="px-6 py-4">
                     {order.status === 'open' && (
                       <button
-                        onClick={() => handleFillOrder(order)}
-                        disabled={ loading || fillingOrderId === order.id && (!provider)}
-                        className={`px-6 py-2 rounded-lg font-medium ${fillingOrderId === order.id || !provider
+                        onClick={() => handleSwapOrder(order)}
+                        disabled={swapLoading || swappingOrderId === order.id || !provider}
+                        className={`px-6 py-2 rounded-lg font-medium ${swappingOrderId === order.id || !provider
                             ? 'bg-gray-300 cursor-not-allowed'
                             : 'bg-blue-500 hover:bg-blue-600 text-white'
                           }`}
                       >
-                        {fillingOrderId === order.id ? 'Filling Order...' : 'Fill Order'}
+                        {swappingOrderId === order.id ? 'Swapping...' : 'Swap Tokens'}
                       </button>
                     )}
                   </td>
