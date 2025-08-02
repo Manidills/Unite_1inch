@@ -269,7 +269,7 @@ export async function insertTrigger(trigger) {
 
 export async function getUserTriggers(walletAddress) {
     try {
-        const apiResponse = await fetch(`${USER_TRIGGERS_URL}?walletAddress=${walletAddress}`, {
+        const apiResponse = await fetch(`${TRIGGER_URL}?walletAddress=${walletAddress}`, {
             headers: HEADERS,
         });
         const result = await apiResponse.json();

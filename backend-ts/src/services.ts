@@ -459,7 +459,7 @@ export const getPortfolioTokens: Handler = async (req, res) => {
 export const insertTrigger: Handler = async (req, res) => {
     const trigger = req.body;
     try {
-        const result = await prisma.triggers.create({
+        const result = await prisma.triggerOrders.create({
             data: trigger
         });
 
@@ -483,11 +483,9 @@ export const insertTrigger: Handler = async (req, res) => {
 export const getTriggerOrders: Handler = async (req, res) => {
     const { walletAddress } = req.query
     try {
-        const result = await prisma.triggers.findMany({
+        const result = await prisma.triggerOrders.findMany({
             where: {
-                walletId: {
-                    not: walletAddress?.toString().toLowerCase()
-                },
+                walletId: walletAddress?.toString().toLowerCase()
             },
         });
 

@@ -1,6 +1,6 @@
-// components/Triggers.js
+// components/OrderHistory.js
 import { useState, useEffect } from 'react';
-import { getUserOrders } from '../helper/apiHelper';
+import { getUserTriggers } from '../helper/apiHelper';
 import { useWallet } from '../contexts/WalletContext';
 
 export default function Triggers() {
@@ -13,14 +13,13 @@ export default function Triggers() {
     const fetchOrderHistory = async () => {
       setIsLoading(true);
       try {
-        const apiResponse = await getUserOrders(account);
+        const apiResponse = await getUserTriggers(account);
 
         if (apiResponse.success && apiResponse.data.length > 0) {
           setOrders(apiResponse.data);
         } else if (!apiResponse.success) {
-          alert('Failed to fetch user orders. Please try again later.');
+          alert('Failed to fetch trigger orders. Please try again later.');
         } else {
-          // Optional: clear or show empty state
           setOrders([]);
         }
       } catch (error) {
@@ -34,6 +33,9 @@ export default function Triggers() {
     fetchOrderHistory();
   }, [account]);
 
+  const handleFillOrder = () => {
+
+  }
 
   const filteredOrders = orders.filter(order => {
     if (filter === 'all') return true;
@@ -42,7 +44,7 @@ export default function Triggers() {
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
-      case 'filled':
+      case 'trigger':
         return 'bg-green-100 text-green-700';
       case 'open':
         return 'bg-yellow-100 text-yellow-700';
@@ -58,7 +60,7 @@ export default function Triggers() {
       <div className="flex items-center justify-center h-64">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-inch-blue"></div>
-          <p className="text-gray-600">Loading trigger orders...</p>
+          <p className="text-gray-600">Loading order history...</p>
         </div>
       </div>
     );
@@ -67,11 +69,11 @@ export default function Triggers() {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      {/* <div className="grid md:grid-cols-4 gap-6">
+      <div className="grid md:grid-cols-4 gap-6">
         <div className="bg-white rounded-xl p-6 border border-gray-200/50 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Orders</p>
+              <p className="text-sm text-gray-600">Total Triggers</p>
               <p className="text-2xl font-bold text-gray-800">{orders.length}</p>
             </div>
             <div className="w-12 h-12 bg-inch-blue/10 rounded-lg flex items-center justify-center">
@@ -85,9 +87,9 @@ export default function Triggers() {
         <div className="bg-white rounded-xl p-6 border border-gray-200/50 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Filled</p>
+              <p className="text-sm text-gray-600">Trigger</p>
               <p className="text-2xl font-bold text-green-600">
-                {orders.filter(o => o.status === 'filled').length}
+                {orders.filter(o => o.status === 'trigger').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -130,20 +132,20 @@ export default function Triggers() {
           </div>
         </div>
 
-      </div> */}
+      </div>
 
       {/* Filters */}
-      {/* <div className="bg-white rounded-xl p-6 border border-gray-200/50 shadow-sm">
+      <div className="bg-white rounded-xl p-6 border border-gray-200/50 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">Order Filters</h3>
+          <h3 className="text-lg font-semibold text-gray-800">Trigger Filters</h3>
           <div className="flex space-x-2">
-            {['all', 'filled', 'open', 'expired'].map((status) => (
+            {['all', 'trigger', 'open', 'expired'].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilter(status)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${filter === status
-                    ? 'bg-inch-blue text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-inch-blue text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -151,7 +153,7 @@ export default function Triggers() {
             ))}
           </div>
         </div>
-      </div> */}
+      </div>
 
       {/* Orders Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
@@ -159,14 +161,13 @@ export default function Triggers() {
           <table className="w-full">
             <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Order ID</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Token Pair</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Trigger ID</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Asset From</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Asset To</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Amount</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Fee</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Total</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Trigger Price</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Date</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Order Hash</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -179,24 +180,36 @@ export default function Triggers() {
                     <div className="flex items-center space-x-2">
                       <div className="w-8 h-8 bg-gradient-to-r from-inch-blue to-inch-light-blue rounded-full flex items-center justify-center">
                         <span className="text-white text-xs font-bold">
-                          {order.tokenPair.split('/')[0].charAt(0)}
+                          {order.assetFrom.charAt(0)}
                         </span>
                       </div>
-                      <span className="font-medium text-gray-800">{order.tokenPair}</span>
+                      <span className="font-medium text-gray-800">{order.assetFrom}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-inch-blue to-inch-light-blue rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">
+                          {order.assetTo.charAt(0)}
+                        </span>
+                      </div>
+                      <span className="font-medium text-gray-800">{order.assetTo}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-600">{order.amount}</td>
-                  <td className="px-6 py-4 font-medium text-gray-800">{order.feePercent}</td>
-                  <td className="px-6 py-4 font-medium text-gray-800">{order.youReceive}</td>
+                  <td className="px-6 py-4 font-medium text-gray-800">{order.priceTarget}</td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                       {order.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(order.createdOn).toLocaleDateString()}
+                  <td className="px-6 py-4">
+                    {order.status === 'trigger' && (
+                      <button className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-800">
+                        {'Trigger Order'}
+                      </button>
+                    )}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{order.orderHash}</td>
                 </tr>
               ))}
             </tbody>

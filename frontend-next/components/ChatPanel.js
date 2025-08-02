@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useWallet } from '../contexts/WalletContext';
-import { supportedTokens, getTokensWithPrices, getOrderIntent } from '../helper/apiHelper'
+import { supportedTokens, getTokensWithPrices, getOrderIntent, insertTrigger } from '../helper/apiHelper'
 import { getOrderInfoFromIntent } from '../helper/orderInfo'
 import { confirmOrder } from '../helper/submitOrder';
 
@@ -33,7 +33,29 @@ export default function ChatPanel() {
         }
         const tokenDetails = await getTokensWithPrices([asset_from, asset_to]);
         let intent = { ...data.intent };
-
+        const assetTo = tokenDetails.find(
+          (token) => token.symbol.toLowerCase() === intent.asset_to.toLowerCase()
+        );
+        const currentValue = assetTo.price
+        const targetValue = intent.price_target
+        if ((intent.trigger_direction === 'down' && currentValue > targetValue) ||
+          (intent.trigger_direction === 'up' && currentValue < targetValue)) {
+          const trigger = {
+            walletId: account.toString().toLowerCase(),
+            assetFrom: intent.asset_from.toString(),
+            assetTo: intent.asset_to.toString(),
+            intent: intent.intent.toString(),
+            trigger: intent.trigger.toString(),
+            amount: intent.amount.toString(),
+            priceTarget: intent.price_target.toString(),
+            direction: intent.trigger_direction.toString(),
+            status: 'open'
+          }
+          await insertTrigger(trigger);
+          alert('Price not favorable yet. Order added to trigger list.')
+          setMessage('')
+          return;
+        }
         if (intent.intent === "sell") {
           // Swap asset_from and asset_to
           const temp = intent.asset_from;

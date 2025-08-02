@@ -14,6 +14,7 @@ model Users {
   lastLogin     String
   UserOrders    Orders[]
   Triggers      Triggers[]
+  TriggerOrders TriggerOrders[]
 }
 
 model Orders {
@@ -42,4 +43,19 @@ model Triggers {
   receiver     String
   status       String
   targetValue  String
+}
+
+model TriggerOrders {
+  id           Int    @id @default(autoincrement())
+  wallet       Users  @relation(fields: [walletId], references: [walletAddress], onDelete: NoAction, onUpdate: NoAction)
+  walletId     String
+  assetFrom    String
+  assetTo      String
+  intent       String
+  trigger      String
+  amount       String
+  priceTarget  String
+  direction    String
+  status       String
+  orderId      String?
 }
