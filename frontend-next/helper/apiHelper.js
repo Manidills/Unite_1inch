@@ -12,6 +12,7 @@ const INSERT_ORDER_URL = `${config.api.baseUrl}/api/insert-order`;
 const USER_ORDER_URL = `${config.api.baseUrl}/api/order-by-address`;
 const ORDER_HISTORY_URL = `${config.api.baseUrl}/api/order-history`;
 const ORDER_DETAILS_URL = `${config.api.baseUrl}/api/order-by-hash`;
+const PORTFOLIO_URL = `${config.api.baseUrl}/api/portfolio/tokens`;
 
 const HEADERS = {
     Authorization: `Bearer ${config.oneInch.apiKey}`,
@@ -193,7 +194,33 @@ export async function getAllChains() {
         const result = await apiResponse.json();
         return result.result;
     } catch (error) {
-        console.error('Failed to fetch user orders', error);
+        console.error('Failed to fetch chain details', error);
+        return [];
+    }
+}
+
+export async function getPortfolioDetails(address, chainId) {
+    try {
+        const apiResponse = await fetch(`${PORTFOLIO_URL}?address=${address}&chainId=${chainId}`, {
+            headers: HEADERS,
+        });
+        const result = await apiResponse.json();
+        return result;
+    } catch (error) {
+        console.error('Failed to fetch portfolio details', error);
+        return [];
+    }
+}
+
+export async function getAllTokens(chainId) {
+    try {
+        const apiResponse = await fetch(`${TOKEN_LIST_URL}?chainId=${chainId}`, {
+            headers: HEADERS,
+        });
+        const result = await apiResponse.json();
+        return result.tokens;
+    } catch (error) {
+        console.error('Failed to fetch token details', error);
         return [];
     }
 }

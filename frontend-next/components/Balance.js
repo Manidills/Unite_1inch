@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown, Wallet, RefreshCw, ExternalLink } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
-import { getAllChains } from '../helper/apiHelper';
+import { getAllChains, getPortfolioDetails, getAllTokens } from '../helper/apiHelper';
 
 export default function WalletBalance() {
     const { account } = useWallet();
@@ -27,14 +27,16 @@ export default function WalletBalance() {
 
         setLoading(true);
         try {
-            const res = await fetch(`/api/token-balances?chainId=${chainId}&wallet=${account}`);
-            const tokenData = await res.json();
+            const tokenData = await getPortfolioDetails(account, chainId)
+            const tokenLogo = await getAllTokens(chainId)
 
-            setTokens(tokenData || []);
+            const result = tokenData.map(token => ({
+                ...token,
+                logoURI: tokenLogo[token.address]?.logoURI
+            }));
+            setTokens(result || []);
 
-            const total = tokenData.reduce((sum, token) => {
-                return sum + parseFloat(token.balanceUSD.replace(/,/g, ''));
-            }, 0);
+            const total = result.reduce((sum, token) => sum + token.value_usd, 0);
             setTotalBalance(total);
         } catch (error) {
             console.error('Error fetching token balances:', error);
@@ -209,7 +211,7 @@ export default function WalletBalance() {
                                 <div className="flex items-center space-x-4">
                                     <div className="relative">
                                         <img
-                                            src={token.image}
+                                            src={token.logoURI}
                                             alt={token.name}
                                             className="w-10 h-10 rounded-full"
                                         />
@@ -233,8 +235,8 @@ export default function WalletBalance() {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-semibold text-gray-900">{token.balance} {token.symbol}</p>
-                                    <p className="text-sm text-gray-500">${token.balanceUSD}</p>
+                                    <p className="font-semibold text-gray-900">{token.amount} {token.symbol}</p>
+                                    <p className="text-sm text-gray-500">${token.value_usd}</p>
                                 </div>
                             </div>
                         ))}
