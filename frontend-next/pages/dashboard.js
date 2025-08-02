@@ -7,12 +7,14 @@ import ChatPanel from '../components/ChatPanel';
 import OrderHistory from '../components/OrderHistory';
 import OrderBook from '../components/OrderBook';
 import Balance from '../components/Balance';
+import CrossChainSwap from '../components/CrossChainSwap';
 
 const TABS = {
   CHAT: 'Chat',
   ORDER_HISTORY: 'OrderHistory',
   ORDER_BOOK: 'OrderBook',
-  BALANCE: 'Balance'
+  BALANCE: 'Balance',
+  CROSSCHAIN_SWAP: 'CrossChainSwap'
 };
 
 export default function Dashboard() {
@@ -41,6 +43,8 @@ export default function Dashboard() {
         return <OrderBook />;
       case TABS.BALANCE:
         return <Balance />;
+      case TABS.CROSSCHAIN_SWAP:
+        return <CrossChainSwap />;
       default:
         return <ChatPanel />;
     }
@@ -124,6 +128,11 @@ export default function Dashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                       </svg>
                     )}
+                    {tab === TABS.CROSSCHAIN_SWAP && (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                      </svg>
+                    )}
                     <span>{tab.replace(/([A-Z])/g, ' $1').trim()}</span>
                   </div>
                 </button>
@@ -162,6 +171,8 @@ export default function Dashboard() {
                   {activeTab === TABS.CHAT && "Chat with our AI assistant for trading insights and support"}
                   {activeTab === TABS.ORDER_HISTORY && "View your complete trading history and transaction details"}
                   {activeTab === TABS.ORDER_BOOK && "Real-time market depth and order book data"}
+                  {activeTab === TABS.BALANCE && "Monitor your wallet balance and asset holdings"}
+                  {activeTab === TABS.CROSSCHAIN_SWAP && "Execute cross-chain swaps using 1inch Fusion+ technology"}
                 </p>
               </div>
 
