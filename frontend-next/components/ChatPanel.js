@@ -93,14 +93,8 @@ export default function ChatPanel() {
     try {
       const result = await confirmOrder(provider, orderInfo, tradeInfo)
 
-
-      if (result && result.status && result.type === 'order') {
+      if (result && result.status) {
         alert('Orders confirmed successfully!');
-        setShowResponse(false);
-        setApiResponse(null);
-        setMessage('');
-      } else if (result && result.status && result.type === 'trigger') {
-        alert('Trigger creeated successfully!. Check trigger orders');
         setShowResponse(false);
         setApiResponse(null);
         setMessage('');
