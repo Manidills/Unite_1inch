@@ -14,31 +14,11 @@ async function getOrderInfoFromIntent(intent, tokenDetails, userAddress) {
     throw new Error("Token details not found for assets in intent.");
   }
 
-  const makingAmount = ethers.parseUnits(intent.price_target, assetFrom.decimals);
+  const amount = intent.amount
+  let makingAmount = (amount * assetTo.price).toFixed(assetFrom.decimals).toString(); 
+  makingAmount = ethers.parseUnits(makingAmount, assetFrom.decimals);
 
-  let targetPrice;
-
-  if (intent.trigger === "price_based") {
-    targetPrice = parseFloat(intent.amount);
-  } else {
-    const fromPrice = parseFloat(assetFrom.price);
-    const percentage = parseFloat(intent.trigger_value) / 100;
-    const direction = intent.trigger_direction || "down";
-
-    if (direction === "up") {
-      targetPrice = fromPrice * (1 + percentage);
-    } else {
-      targetPrice = fromPrice * (1 - percentage);
-    }
-  }
-  const targetValue = intent.price_target;
-  const currentValue = assetTo.price * intent.amount
-
-  // const total = parseFloat(intent.amount) * targetPrice; // incorrect
-  const takingAmount = ethers.parseUnits(
-    targetPrice.toFixed(assetTo.decimals),
-    assetTo.decimals
-  );
+  const takingAmount = ethers.parseUnits(amount, assetTo.decimals);
 
   const orderInfo = {
     makerAsset: assetFrom.address,
@@ -50,16 +30,11 @@ async function getOrderInfoFromIntent(intent, tokenDetails, userAddress) {
   };
 
   const feeInfo = await getGasfee(orderInfo);
-  const tradeRes = await getTradeSummary(orderInfo, feeInfo, tokenDetails)
-  const result = {
-    ...tradeRes,
-    targetValue,
-    currentValue
-  }
+  const tradeInfo = await getTradeSummary(orderInfo, feeInfo, tokenDetails)
 
   return {
     orderInfo, 
-    tradeInfo: result,
+    tradeInfo,
   };
 }
 

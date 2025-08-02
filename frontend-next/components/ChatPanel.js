@@ -93,7 +93,7 @@ export default function ChatPanel() {
     try {
       const result = await confirmOrder(provider, orderInfo, tradeInfo)
 
-      if (result && result.status) {
+      if (result && result.success) {
         alert('Orders confirmed successfully!');
         setShowResponse(false);
         setApiResponse(null);
