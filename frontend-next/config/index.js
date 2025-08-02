@@ -18,4 +18,5 @@ export const config = {
     },
     chainId: 1,
     expiry: process.env.NEXT_PUBLIC_EXPIRY || 86400,
+    intentUrl: process.env.NEXT_PUBLIC_INTENT_URL
 };

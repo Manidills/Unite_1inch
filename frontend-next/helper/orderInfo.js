@@ -31,6 +31,8 @@ async function getOrderInfoFromIntent(intent, tokenDetails, userAddress) {
       targetPrice = fromPrice * (1 - percentage);
     }
   }
+  const targetValue = intent.price_target;
+  const currentValue = assetTo.price * intent.amount
 
   // const total = parseFloat(intent.amount) * targetPrice; // incorrect
   const takingAmount = ethers.parseUnits(
@@ -48,12 +50,16 @@ async function getOrderInfoFromIntent(intent, tokenDetails, userAddress) {
   };
 
   const feeInfo = await getGasfee(orderInfo);
-  const tradeInfo = await getTradeSummary(orderInfo, feeInfo, tokenDetails)
+  const tradeRes = await getTradeSummary(orderInfo, feeInfo, tokenDetails)
+  const result = {
+    ...tradeRes,
+    targetValue,
+    currentValue
+  }
 
-  console.log(intent,tokenDetails, orderInfo, feeInfo, tradeInfo)
   return {
     orderInfo, 
-    tradeInfo,
+    tradeInfo: result,
   };
 }
 

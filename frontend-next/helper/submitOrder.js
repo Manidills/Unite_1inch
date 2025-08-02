@@ -2,7 +2,7 @@ import { MakerTraits, Address, FetchProviderConnector, Sdk } from '@1inch/limit-
 import { ethers } from 'ethers';
 import { abi as erc20Abi } from './abi'
 import { config } from '../config/index';
-import { insertOrder } from './apiHelper';
+import { insertOrder, insertTrigger } from './apiHelper';
 
 export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
     try {
@@ -10,8 +10,24 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
             makerAsset,
             makingAmount,
         } = orderInfo;
+        const { targetValue, currentValue } = tradeInfo;
+        
         const signer = await provider.getSigner();
         const walletAddress = await signer.getAddress();
+        if (currentValue < targetValue){
+            const trigger = {
+                makerAsset: orderInfo.makerAsset.toString(),
+                takerAsset: orderInfo.takerAsset.toString(),
+                makingAmount: orderInfo.makingAmount.toString(),
+                takingAmount: orderInfo.takingAmount.toString(),
+                maker: orderInfo.maker.toString(),
+                receiver: orderInfo.receiver.toString(),
+                status: 'open',
+                targetValue: targetValue,
+                walletId: walletAddress,
+            }
+            return await insertTrigger(trigger)
+        }
         const making = new Address(makerAsset);
 
         // ✅ 1. Check and approve token if needed
@@ -53,7 +69,6 @@ export const confirmOrder = async (provider, orderInfo, tradeInfo) => {
 
         const orderHash = limitOrder.getOrderHash(1)
 
-        console.log('✅ orderHash', orderHash)
         await sdk.submitOrder(limitOrder, signature)
 
         const orderBody = {

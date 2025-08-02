@@ -60,7 +60,7 @@ export async function getTokensWithPrices(symbols = []) {
 
 export async function getGasfee(orderInfo) {
     try {
-        const { makingAmount: makerAmount , takingAmount: takerAmount, makerAsset, takerAsset } = orderInfo;
+        const { makingAmount: makerAmount, takingAmount: takerAmount, makerAsset, takerAsset } = orderInfo;
         const gasFeeRes = await fetch(`${GAS_FEE_URL}?makerAsset=${makerAsset}&takerAsset=${takerAsset}&makerAmount=${makerAmount}&takerAmount=${takerAmount}`, {
             headers: HEADERS,
         });
@@ -221,6 +221,47 @@ export async function getAllTokens(chainId) {
         return result.tokens;
     } catch (error) {
         console.error('Failed to fetch token details', error);
+        return [];
+    }
+}
+
+export async function getOrderIntent(message, account) {
+    const intentUrl = `${config.intentUrl}`
+    try {
+        const apiResponse = await fetch(intentUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                query: message,
+                wallet_address: account,
+                receiver_address: account,
+            }),
+        });
+        const result = await apiResponse.json();
+        return result;
+    } catch (error) {
+        console.error('Failed to fetch user orders', error);
+        return [];
+    }
+}
+
+export async function insertTrigger(trigger) {
+    try {
+        const apiResponse = await fetch(intentUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(trigger),
+        });
+        const result = await apiResponse.json();
+        return result;
+    } catch (error) {
+        console.error('Failed to fetch user orders', error);
         return [];
     }
 }

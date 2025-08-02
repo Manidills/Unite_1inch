@@ -9,22 +9,37 @@ datasource db {
 }
 
 model Users {
-  id            Int      @id @default(autoincrement())
-  walletAddress String   @unique
+  id            Int        @id @default(autoincrement())
+  walletAddress String     @unique
   lastLogin     String
   UserOrders    Orders[]
+  Triggers      Triggers[]
 }
 
 model Orders {
+  id         Int     @id @default(autoincrement())
+  wallet     Users   @relation(fields: [walletId], references: [walletAddress], onDelete: NoAction, onUpdate: NoAction)
+  walletId   String
+  orderHash  String  @unique
+  signature  String?
+  tokenPair  String
+  amount     String
+  feePercent String
+  youReceive String
+  status     String
+  createdOn  String
+}
+
+model Triggers {
   id           Int    @id @default(autoincrement())
   wallet       Users  @relation(fields: [walletId], references: [walletAddress], onDelete: NoAction, onUpdate: NoAction)
   walletId     String
-  orderHash    String @unique
-  signature    String?
-  tokenPair    String
-  amount       String
-  feePercent   String
-  youReceive   String
+  makerAsset   String
+  takerAsset   String
+  makingAmount String
+  takingAmount String
+  maker        String
+  receiver     String
   status       String
-  createdOn    String
+  targetValue  String
 }

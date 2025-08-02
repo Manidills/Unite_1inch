@@ -455,3 +455,27 @@ export const getPortfolioTokens: Handler = async (req, res) => {
         res.status(500).json({ error: "Failed to fetch portfolio details" });
     }
 }
+
+export const insertTrigger: Handler = async (req, res) => {
+    const trigger = req.body;
+    try {
+        const result = await prisma.triggers.create({
+            data: trigger
+        });
+
+        if (!result) {
+            return res.status(400).json({
+                success: false,
+                error: 'Failed to insert trigger'
+            })
+        }
+        return res.status(200).json({
+            success: true,
+            message: "trigger inserted in db",
+            data: result
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Failed to insert order" });
+    }
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useWallet } from '../contexts/WalletContext';
-import { supportedTokens, getTokensWithPrices } from '../helper/apiHelper'
+import { supportedTokens, getTokensWithPrices, getOrderIntent } from '../helper/apiHelper'
 import { getOrderInfoFromIntent } from '../helper/orderInfo'
 import { confirmOrder } from '../helper/submitOrder';
 
@@ -19,25 +19,7 @@ export default function ChatPanel() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://defitest-production.up.railway.app/process-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          query: message,
-          wallet_address: account,
-          receiver_address: account,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
+      const data = await getOrderIntent(message, account)
       if (data.success && data.intent) {
         const { asset_from, asset_to } = data.intent;
 

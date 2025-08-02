@@ -13,6 +13,7 @@ import {
     getOrderHistory,
     getOrderByOrderHash,
     getPortfolioTokens,
+    insertTrigger,
 } from './services';
 
 router.post('/login', userLogin);
@@ -27,5 +28,6 @@ router.post('/insert-order', insertOrder);
 router.get('/order-by-address', getAllOrders)
 router.get('/order-history', getOrderHistory)
 router.get('/portfolio/tokens', getPortfolioTokens)
+router.post('/trigger', insertTrigger)
 
 export default router;
