@@ -6,11 +6,13 @@ import Head from 'next/head';
 import ChatPanel from '../components/ChatPanel';
 import OrderHistory from '../components/OrderHistory';
 import OrderBook from '../components/OrderBook';
+import Balance from '../components/Balance';
 
 const TABS = {
   CHAT: 'Chat',
   ORDER_HISTORY: 'OrderHistory',
-  ORDER_BOOK: 'OrderBook'
+  ORDER_BOOK: 'OrderBook',
+  BALANCE: 'Balance'
 };
 
 export default function Dashboard() {
@@ -37,6 +39,8 @@ export default function Dashboard() {
         return <OrderHistory />;
       case TABS.ORDER_BOOK:
         return <OrderBook />;
+      case TABS.BALANCE:
+        return <Balance />;
       default:
         return <ChatPanel />;
     }
@@ -94,11 +98,10 @@ export default function Dashboard() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`w-full text-left px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                    activeTab === tab
+                  className={`w-full text-left px-4 py-3 rounded-xl font-medium transition-all duration-200 ${activeTab === tab
                       ? 'bg-gradient-to-r from-inch-blue to-inch-light-blue text-white shadow-lg shadow-inch-blue/25'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center space-x-3">
                     {tab === TABS.CHAT && (
@@ -114,6 +117,11 @@ export default function Dashboard() {
                     {tab === TABS.ORDER_BOOK && (
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    )}
+                    {tab === TABS.BALANCE && (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                       </svg>
                     )}
                     <span>{tab.replace(/([A-Z])/g, ' $1').trim()}</span>

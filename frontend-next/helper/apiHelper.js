@@ -4,6 +4,7 @@ export const supportedTokens = ['USDT', 'USDC', 'WETH', 'DAI', 'WBTC'];
 
 const LOGIN_URL = `${config.api.baseUrl}/api/login`;
 const TOKEN_LIST_URL = `${config.api.baseUrl}/api/tokens`;
+const CHAIN_LIST_URL = `${config.api.baseUrl}/api/chains`;
 const PRICE_URL = `${config.api.baseUrl}/api/prices`;
 const GAS_FEE_URL = `${config.api.baseUrl}/api/gasFee`;
 const ORDER_URL = `${config.api.baseUrl}/api/order`;
@@ -178,6 +179,19 @@ export async function getOrderDetails(orderHash) {
         });
         const result = await apiResponse.json();
         return result;
+    } catch (error) {
+        console.error('Failed to fetch user orders', error);
+        return [];
+    }
+}
+
+export async function getAllChains() {
+    try {
+        const apiResponse = await fetch(`${CHAIN_LIST_URL}`, {
+            headers: HEADERS,
+        });
+        const result = await apiResponse.json();
+        return result.result;
     } catch (error) {
         console.error('Failed to fetch user orders', error);
         return [];

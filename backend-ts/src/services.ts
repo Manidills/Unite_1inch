@@ -23,7 +23,9 @@ export const getAllChains: Handler = async (req, res) => {
 }
 
 export const getAllTokens: Handler = async (req, res) => {
-    const url = `${config.oneInch.baseUrl}/swap/v5.2/1/tokens`;
+    const { chainId } = req.query;
+    let id = chainId || config.chainId
+    const url = `${config.oneInch.baseUrl}/swap/v5.2/${id}/tokens`;
     try {
         const response = await axios.get(url, {
             headers: {
