@@ -34,7 +34,7 @@ Users express their DeFi goals in **natural language**, and our AI agent interpr
 - ✅ **Buy Orders (Submit)**: "Buy 0.0003 WETH when price is below $4,000" → Immediate order submission
 - ✅ **Buy Orders (Trigger)**: "Buy 0.0003 WETH when price goes above $4,000" → Conditional trigger order
 
-#### 🛠️ Planned Strategies (Roadmap)
+#### 🛠️ Under Working Strategies (Roadmap)
 **Additional strategies to be implemented for ETH/WETH/USDC:**
 
 **📊 Advanced Order Types:**
