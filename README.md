@@ -1,29 +1,29 @@
-# 🧠 1inch AI-Driven Smart Vault
+# 🧠 1inch AI-Driven Smart Vault: The Future of DeFi is Conversational
 
-> **Natural Language DeFi Execution**: A non-custodial application where users articulate DeFi strategies in plain English, and intelligent AI agents translate them into precise, executable on-chain operations through 1inch's battle-tested protocols.
+> Natural Language DeFi Execution: We've built an AI that understands your financial goals in plain English and executes them flawlessly on-chain, transforming complex DeFi into a seamless, conversational experience powered by 1inch.
+
 
 ![1inch AI Vault](https://img.shields.io/badge/1inch-AI--Vault-blue?style=for-the-badge&logo=ethereum)
 ![Cross Chain](https://img.shields.io/badge/Cross--Chain-Ethereum↔Polkadot-green?style=for-the-badge)
 ![AI Powered](https://img.shields.io/badge/AI-Powered-orange?style=for-the-badge)
 
-## 🎯 Project Vision
+## 🎯 Our Vision: Unlocking DeFi for Everyone
 
-The **1inch AI-Driven Smart Vault** is a revolutionary non-custodial application that empowers users to articulate their DeFi investment or liquidity provisioning goals using natural language. At its core, an intelligent AI agent interprets these high-level objectives and translates them into a series of precise, executable on-chain strategies.
+**DeFi remains a technical maze. The 1inch AI-Driven Smart Vault smashes through this barrier. We’re not just building another platform; we’re creating a new paradigm for user interaction with finance. Imagine a CEX's simplicity fused with DeFi's non-custodial power. That is our core promise.**
 
-**Crucially, the "vault" itself is not a new smart contract** that users need to deploy or manage. Instead, it serves as a **conceptual framework** for securely managing user assets and executing strategies through **1inch's existing, battle-tested, and audited protocols** (Fusion+ and Limit Order Protocol).
+**The "vault" is not a new contract to audit or fear. It's a conceptual breakthrough—a secure, intelligent AI layer that leverages 1inch's entire suite of battle-tested protocols (Fusion+, Limit Order Protocol, etc.) to manage and execute your strategy. Users retain full control of their assets, while our AI handles the technical heavy lifting, from gas optimization to cross-chain logistics.**
 
-This innovative approach delivers a **user experience akin to a centralized exchange (CEX)** – intuitive and streamlined – while preserving the fundamental benefits of decentralized finance: **non-custodial asset control** and **transparency**.
+🤖 Core Innovation: The AI Agent That Speaks Your Language
+Our intelligent AI agent is the heart of this revolution. It's a sophisticated translator, turning a user's high-level intent into a series of precise, on-chain operations that are impossible to mess up.
 
-## 🤖 Core Innovation: Natural Language Strategy Execution
+🧠 AI Agent Capabilities
+Intent-Driven Execution: Our AI doesn't just process keywords; it understands your financial intent and translates it into an optimal, multi-step 1inch protocol strategy.
 
-### How It Works
-Users express their DeFi goals in **natural language**, and our AI agent interprets these objectives into **executable 1inch protocol operations**:
+Dynamic Strategy Translation: It maps conversational goals like "set a stop loss" to the complex mechanics of 1inch's Limit Order Protocol.
 
-#### 🧠 AI Agent Capabilities
-- **Natural Language Processing**: Converts user intentions into precise trading parameters
-- **Strategy Translation**: Maps high-level goals to specific 1inch Fusion+ and Limit Order operations  
-- **Risk Assessment**: Analyzes market conditions and suggests optimal execution timing
-- **Gas Optimization**: Leverages 1inch's efficient routing for cost-effective transactions
+Predictive Optimization: Our agent analyzes market data to suggest the best time and method for execution, leveraging 1inch Fusion+'s routing for maximum efficiency and MEV protection.
+
+
 
 #### 🎯 Currently Supported Strategies
 **Live and functional through 1inch protocols:**
@@ -179,6 +179,12 @@ For this hackathon, we've deployed our cross-chain extension on **Sepolia (Ether
 | **Moonbeam (Polkadot)** | TestToken (TUSDC) | `0x810968973610bcbfa625e2138fa480a0fa656b7d` |
 
 > **Note**: This testnet implementation demonstrates our cross-chain extension capabilities. In production phases, this same architecture will support all major L1s and L2s.
+>
+Transaction Proofs
+
+Ethereum Tx: https://etherscan.io/tx/0x82445640c72e0dfb8872ff14f85bde1dd1eb63cb6bf91f3c5c003b091cf74c55
+
+Polkadot Tx: https://moonbase.moonscan.io/tx/0xf3e08aa666e60d24d95c6d0bf3cb6f4e2daee1703436abd781145ddf8b70af3f
 
 ## 📊 1inch API Integration & Revenue Model
 
