@@ -349,10 +349,8 @@ We welcome contributions from the community! Our project represents a new paradi
 
 ## 📞 Contact & Demo
 
-- **Live Demo**: [https://unite-1inch.vercel.app](https://unite-1inch.vercel.app)
-- **Video Walkthrough**: [YouTube Demo](https://youtube.com/demo)
+- **Live Demo**: [https://oneinchweb.onrender.com/](https://oneinchweb.onrender.com/)
 - **Team Contact**: [team@unite1inch.com](mailto:team@unite1inch.com)
-- **Documentation**: [GitBook Docs](https://docs.unite1inch.com)
 
 ---
 
