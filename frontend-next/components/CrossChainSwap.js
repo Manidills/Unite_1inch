@@ -823,57 +823,14 @@ export default function CrossChainSwap() {
         throw new Error('No Sepolia order ID found');
       }
       
-      // First check if Sepolia order is still valid by switching networks
-      try {
-        console.log('🔍 Checking Sepolia order validity...');
-        
-        // Temporarily switch to Sepolia to check order
-        await switchNetwork('sepolia');
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for network switch
-        
-        const sepoliaProvider = new ethers.BrowserProvider(window.ethereum);
-        const sepoliaSigner = await sepoliaProvider.getSigner();
-        const sepoliaBridgeContract = new ethers.Contract(NETWORKS.sepolia.bridge, BRIDGE_ABI, sepoliaSigner);
-        
-        console.log('🔍 Querying Sepolia order:', sepoliaOrderId);
-        const orderInfo = await sepoliaBridgeContract.getOrder(sepoliaOrderId);
-        const currentTime = Math.floor(Date.now() / 1000);
-        
-        console.log('✅ Sepolia order check:', {
-          orderId: sepoliaOrderId,
-          secretHash: orderInfo.secretHash,
-          auctionEnd: Number(orderInfo.auctionEnd),
-          currentTime: currentTime,
-          timeRemaining: Number(orderInfo.auctionEnd) - currentTime,
-          isExpired: currentTime > Number(orderInfo.auctionEnd),
-          status: Number(orderInfo.status)
-        });
-        
-        if (currentTime > Number(orderInfo.auctionEnd)) {
-          throw new Error(`Sepolia order has expired. Please restart the demo with a new order. Current time: ${currentTime}, Order expired at: ${Number(orderInfo.auctionEnd)}`);
-        }
-        
-        // Switch back to Moonbeam after check
-        await switchNetwork('moonbeam');
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for network switch back
-        
-      } catch (checkErr) {
-        console.error('❌ Sepolia order check failed:', checkErr);
-        
-        // If the order check fails, let's continue anyway but warn the user
-        console.log('⚠️ Continuing without order validation - order might be expired');
-        
-        // Still switch back to Moonbeam
+      // Skip validation and proceed directly to Moonbeam order creation
+      console.log('🚀 Skipping Sepolia order validation for faster execution...');
+      
+      // Ensure we're on Moonbeam network
+      if (currentNetwork !== 'moonbeam') {
+        console.log('🔄 Switching to Moonbeam...');
         await switchNetwork('moonbeam');
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Only throw if it's clearly an expiry issue
-        if (checkErr.message.includes('expired') || checkErr.message.includes('Order expired')) {
-          throw checkErr;
-        }
-        
-        // For other errors (like network issues), continue with a warning
-        console.log('⚠️ Warning: Could not verify Sepolia order status, proceeding anyway');
       }
       
       // Generate unique Moonbeam order ID if not already created
@@ -1268,17 +1225,47 @@ export default function CrossChainSwap() {
             </div>
           )}
 
-          {/* Network Status */}
-          {!isNetworkCorrect && currentStepConfig && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-center text-sm text-yellow-800">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                Switch to {NETWORKS[currentStepConfig.network]?.name} to continue
-              </div>
+          {/* Network Status & Switching */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">Current Network</span>
+              <span className="text-xs text-gray-500">{NETWORKS[currentNetwork]?.name || 'Unknown'}</span>
             </div>
-          )}
+            <div className="flex space-x-2">
+              <button
+                onClick={() => switchNetwork('sepolia')}
+                className={`flex-1 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+                  currentNetwork === 'sepolia' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Sepolia
+              </button>
+              <button
+                onClick={() => switchNetwork('moonbeam')}
+                className={`flex-1 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+                  currentNetwork === 'moonbeam' 
+                    ? 'bg-purple-500 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Moonbeam
+              </button>
+            </div>
+            
+            {/* Wrong Network Warning */}
+            {!isNetworkCorrect && currentStepConfig && (
+              <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center text-sm text-yellow-800">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  Switch to {NETWORKS[currentStepConfig.network]?.name} to continue this step
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Main Action Button */}
           {currentStep >= SWAP_STEPS.length ? (
@@ -1394,12 +1381,12 @@ export default function CrossChainSwap() {
             >
               Reset
             </button>
-            {(error.includes('expired') || error.includes('validation')) && (
+            {(error.includes('expired') || error.includes('validation') || error.includes('Sepolia order')) && (
               <button
-                onClick={restartFromMoonbeamOrder}
+                onClick={currentStep === 6 ? skipValidationAndProceed : restartFromMoonbeamOrder}
                 className="px-3 py-1 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
               >
-                Continue Anyway
+                {currentStep === 6 ? 'Skip Validation & Continue' : 'Continue Anyway'}
               </button>
             )}
           </div>
